@@ -28,6 +28,21 @@ struct AppState {
     http_client: Client,
 }
 
+const REQUIRED_READY_TABLES: &[&str] = &[
+    "workspaces",
+    "oauth_state_tokens",
+    "users",
+    "oauth_identities",
+    "user_profiles",
+    "user_sessions",
+    "role_definitions",
+    "permission_definitions",
+    "role_permissions",
+    "user_roles",
+    "event_store",
+    "audit_chain",
+];
+
 #[derive(Debug, Serialize)]
 struct HealthResponse {
     status: &'static str,
@@ -209,6 +224,8 @@ async fn health_ready(
                 trace_id,
             }
         })?;
+
+    ensure_required_schema_ready(&state.db_pool, &trace_id).await?;
 
     Ok(Json(HealthResponse {
         status: "ok",
@@ -973,6 +990,59 @@ async fn ensure_workspace_exists(
             "workspace_id does not exist or is not active",
             trace_id.to_string(),
         ));
+    }
+
+    Ok(())
+}
+
+async fn ensure_required_schema_ready(
+    pool: &sqlx::PgPool,
+    trace_id: &str,
+) -> Result<(), AppError> {
+    for table_name in REQUIRED_READY_TABLES {
+        let regclass_name = format!("public.{table_name}");
+        let exists = sqlx::query_scalar::<_, Option<String>>("SELECT to_regclass($1)::text")
+            .bind(&regclass_name)
+            .fetch_one(pool)
+            .await
+            .map_err(|_| AppError::ReadinessFailed {
+                error_code: "DB_SCHEMA_CHECK_FAILED",
+                message: "failed to verify required schema".to_string(),
+                trace_id: trace_id.to_string(),
+            })?;
+
+        if exists.is_none() {
+            return Err(AppError::ReadinessFailed {
+                error_code: "DB_SCHEMA_NOT_READY",
+                message: format!("missing required table: {table_name}"),
+                trace_id: trace_id.to_string(),
+            });
+        }
+    }
+
+    let default_workspace_ready = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+            SELECT 1
+            FROM workspaces
+            WHERE id = '00000000-0000-0000-0000-000000000001'
+              AND workspace_code = 'default'
+              AND status = 'active'
+        )",
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|_| AppError::ReadinessFailed {
+        error_code: "DB_SCHEMA_CHECK_FAILED",
+        message: "failed to verify default workspace bootstrap".to_string(),
+        trace_id: trace_id.to_string(),
+    })?;
+
+    if !default_workspace_ready {
+        return Err(AppError::ReadinessFailed {
+            error_code: "WORKSPACE_BOOTSTRAP_MISSING",
+            message: "default workspace bootstrap record is missing".to_string(),
+            trace_id: trace_id.to_string(),
+        });
     }
 
     Ok(())
