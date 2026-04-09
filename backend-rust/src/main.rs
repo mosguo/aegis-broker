@@ -221,7 +221,7 @@ async fn health_ready(
             AppError::ReadinessFailed {
                 error_code: "DB_NOT_READY",
                 message: "database connectivity check failed".to_string(),
-                trace_id,
+                trace_id: trace_id.clone(),
             }
         })?;
 
