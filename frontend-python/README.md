@@ -1,28 +1,28 @@
 # frontend-python
 
-AegisBroker 前端（v0.1.1）提供可直接部署的靜態控制台頁面。
+前端控制台目前採用單頁靜態介面，由 `server.py` 提供 `index.html` 與執行時 `config.js`。
 
-## 功能
+## 目前功能
 
-- i18n 語系切換：`zh-TW`、`zh-CN`、`en`、`es`、`tr`
-- 後端健康檢查觸發（`/health/live`、`/health/ready`）
-- Google OAuth 啟動（`/auth/google/start`）
-- Session Token 輸入與 `GET /v1/me/profile` 讀取
-- `PUT /v1/me/profile` 個人資料更新（display_name / avatar_url / locale / reason_code）
+- Zeabur 風格左側欄位與底部用戶卡片
+- 左下三點選單整合用戶屬性操作
+- `GET /health/live` 與 `GET /health/ready` 自動輪詢
+- 若有 Session Token，會自動查詢 `GET /v1/me/profile`
+- `PUT /v1/me/profile` 可更新 `display_name`、`avatar_url`、`locale`、`reason_code`
+- `GET /auth/google/start` 可啟動 Google OAuth 流程
 
-## Local run
+## 啟動方式
 
 ```bash
 cd frontend-python
 python server.py
 ```
 
+## 執行時設定
 
-## Runtime config
+`server.py` 會提供 `/config.js`，目前支援：
 
-`server.py` 會提供 `/config.js`，將以下環境變數注入前端：
+- `BACKEND_API_BASE_URL`
+- `DEFAULT_LOCALE`
 
-- `BACKEND_API_BASE_URL`：後端 API 基底 URL（建議在 Zeabur 設定）
-- `DEFAULT_LOCALE`：預設語系
-
-若部署後前端與後端是不同網域，也可在頁面上的 **Backend API Base URL** 欄位直接覆寫，會儲存在瀏覽器 localStorage（key: `aegis.backendBaseUrl`）。
+若頁面上修改 `Backend API Base URL`，會即時寫入 `localStorage` 的 `aegis.backendBaseUrl`。
