@@ -14,6 +14,8 @@
   - `/health/*`
   - `/auth/google/*`
   - `/v1/*`
+- `GET /v1/workspaces` 可列出可用 workspace
+- `POST /v1/workspaces` 可建立新的 workspace 並取得正式 `workspace_id`
 
 ## 啟動方式
 
@@ -43,3 +45,28 @@ python server.py
 - `https://mosguo.zeabur.app/health/ready`
 - `https://mosguo.zeabur.app/auth/google/start?workspace_id=<WORKSPACE_ID>`
 - `https://mosguo.zeabur.app/v1/me/profile`
+- `https://mosguo.zeabur.app/v1/workspaces`
+
+## workspace_id 取得方式
+
+正式流程改為先向 backend 建立或查詢 workspace：
+
+```http
+GET /v1/workspaces
+POST /v1/workspaces
+Content-Type: application/json
+
+{
+  "name": "Mos Workspace",
+  "workspace_code": "mos-workspace"
+}
+```
+
+系統會回傳：
+
+- `workspace_id`
+- `workspace_code`
+- `name`
+- `status`
+
+OAuth 啟動網址需帶入回傳的 `workspace_id`。

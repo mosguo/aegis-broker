@@ -33,6 +33,21 @@ struct HealthResponse {
     service: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct CreateWorkspaceRequest {
+    workspace_code: Option<String>,
+    name: String,
+}
+
+#[derive(Debug, Serialize)]
+struct WorkspaceDto {
+    workspace_id: Uuid,
+    workspace_code: String,
+    name: String,
+    status: String,
+    created_at: String,
+}
+
 #[derive(Debug, Serialize)]
 struct AuthStartResponse {
     auth_url: String,
@@ -129,6 +144,8 @@ async fn main() {
     let app = Router::new()
         .route("/health/live", get(health_live))
         .route("/health/ready", get(health_ready))
+        .route("/v1/workspaces", get(list_workspaces))
+        .route("/v1/workspaces", axum::routing::post(create_workspace))
         .route("/auth/google/start", get(auth_google_start))
         .route("/auth/google/callback", get(auth_google_callback))
         .route("/v1/me/profile", get(get_me_profile))
@@ -192,12 +209,98 @@ async fn health_ready(
     }))
 }
 
+async fn list_workspaces(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<Vec<WorkspaceDto>>, AppError> {
+    let trace_id = Uuid::new_v4().to_string();
+    let rows = sqlx::query_as::<_, (Uuid, String, String, String, chrono::DateTime<Utc>)>(
+        "SELECT id, workspace_code, name, status, created_at
+         FROM workspaces
+         ORDER BY created_at ASC",
+    )
+    .fetch_all(&state.db_pool)
+    .await
+    .map_err(|_| AppError::internal("DB_READ_FAILED", "failed to list workspaces", trace_id))?;
+
+    Ok(Json(
+        rows.into_iter()
+            .map(|(workspace_id, workspace_code, name, status, created_at)| WorkspaceDto {
+                workspace_id,
+                workspace_code,
+                name,
+                status,
+                created_at: created_at.to_rfc3339(),
+            })
+            .collect(),
+    ))
+}
+
+async fn create_workspace(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<CreateWorkspaceRequest>,
+) -> Result<Json<WorkspaceDto>, AppError> {
+    let trace_id = Uuid::new_v4().to_string();
+    let name = req.name.trim();
+    if name.is_empty() {
+        return Err(AppError::bad_request(
+            "WORKSPACE_NAME_REQUIRED",
+            "workspace name is required",
+            trace_id,
+        ));
+    }
+
+    let workspace_code = req
+        .workspace_code
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| {
+            let suffix: String = rand::thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(8)
+                .map(char::from)
+                .collect();
+            format!("ws-{}", suffix.to_ascii_lowercase())
+        });
+
+    let workspace_id = Uuid::new_v4();
+    let created_at =
+        sqlx::query_scalar::<_, chrono::DateTime<Utc>>(
+            "INSERT INTO workspaces (id, workspace_code, name, status)
+             VALUES ($1, $2, $3, 'active')
+             RETURNING created_at",
+        )
+        .bind(workspace_id)
+        .bind(&workspace_code)
+        .bind(name)
+        .fetch_one(&state.db_pool)
+        .await
+        .map_err(|err| {
+            let message = if err.to_string().contains("workspaces_workspace_code_key") {
+                "workspace_code already exists"
+            } else {
+                "failed to create workspace"
+            };
+            AppError::bad_request("WORKSPACE_CREATE_FAILED", message, trace_id.clone())
+        })?;
+
+    Ok(Json(WorkspaceDto {
+        workspace_id,
+        workspace_code,
+        name: name.to_string(),
+        status: "active".to_string(),
+        created_at: created_at.to_rfc3339(),
+    }))
+}
+
 async fn auth_google_start(
     State(state): State<Arc<AppState>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<AuthStartResponse>, AppError> {
     let trace_id = Uuid::new_v4().to_string();
     let workspace_id = parse_workspace_id(&params, &trace_id)?;
+    ensure_workspace_exists(&state.db_pool, workspace_id, &trace_id).await?;
     let client_id = state.config.google_client_id.clone().ok_or_else(|| {
         AppError::service_unavailable(
             "OAUTH_NOT_CONFIGURED",
@@ -832,6 +935,40 @@ fn parse_workspace_id(params: &HashMap<String, String>, trace_id: &str) -> Resul
                 )
             })
         })
+}
+
+async fn ensure_workspace_exists(
+    pool: &sqlx::PgPool,
+    workspace_id: Uuid,
+    trace_id: &str,
+) -> Result<(), AppError> {
+    let exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+            SELECT 1
+            FROM workspaces
+            WHERE id = $1 AND status = 'active'
+        )",
+    )
+    .bind(workspace_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|_| {
+        AppError::internal(
+            "DB_READ_FAILED",
+            "failed to validate workspace",
+            trace_id.to_string(),
+        )
+    })?;
+
+    if !exists {
+        return Err(AppError::bad_request(
+            "WORKSPACE_NOT_FOUND",
+            "workspace_id does not exist or is not active",
+            trace_id.to_string(),
+        ));
+    }
+
+    Ok(())
 }
 
 async fn resolve_session_identity(

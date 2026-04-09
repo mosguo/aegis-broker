@@ -51,7 +51,19 @@
 - OAuth 啟動入口
 - profile/session API
 
-### 5. 比較圖說
+### 5. workspace 建立與正式 ID 流程
+
+為避免登入流程依賴手動輸入任意 UUID，本輪補上：
+
+- `workspaces` 實表
+- 預設 seed workspace
+- `GET /v1/workspaces`
+- `POST /v1/workspaces`
+- OAuth start 前的 workspace existence validation
+
+此後 `workspace_id` 應來自正式 workspace 記錄，而不是只做字串格式驗證。
+
+### 6. 比較圖說
 
 控制台首頁新增「介面比較圖說」區塊，以文字方式對照：
 
