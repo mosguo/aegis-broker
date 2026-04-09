@@ -5,7 +5,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Path, Query, State},
-    http::HeaderMap,
+    http::{HeaderMap, Method},
     routing::{get, put},
     Json, Router,
 };
@@ -17,6 +17,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::postgres::PgPoolOptions;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -141,6 +142,11 @@ async fn main() {
         http_client: Client::new(),
     });
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::OPTIONS])
+        .allow_headers(Any);
+
     let app = Router::new()
         .route("/health/live", get(health_live))
         .route("/health/ready", get(health_ready))
@@ -154,6 +160,7 @@ async fn main() {
             "/v1/workspaces/:workspace_id/users/:user_id/roles",
             put(update_user_roles),
         )
+        .layer(cors)
         .with_state(app_state);
 
     info!(
