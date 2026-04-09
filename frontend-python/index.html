@@ -3,89 +3,444 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AegisBroker v0.1.1</title>
+  <title>AegisBroker v0.1.2</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 920px; margin: 2rem auto; padding: 0 1rem; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; margin-top: 1rem; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
-    button { padding: .5rem .9rem; border-radius: 8px; border: 1px solid #444; cursor: pointer; margin-right: .4rem; margin-top: .2rem; }
-    input, select { padding: .45rem; border-radius: 8px; border: 1px solid #bbb; width: 100%; margin: .25rem 0 .8rem; }
-    pre { background: #111; color: #f3f3f3; padding: .8rem; border-radius: 8px; overflow: auto; }
+    :root {
+      --bg: #071426;
+      --panel: #10253c;
+      --panel-2: #0f2135;
+      --line: #24445f;
+      --text: #e8f2ff;
+      --muted: #98b3d3;
+      --accent: #4da3ff;
+      --accent-2: #78c9ff;
+      --ok: #2fce9f;
+      --warn: #ffb547;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #0e2238 0%, var(--bg) 55%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      min-height: 100vh;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: rgba(7, 19, 34, .9);
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      gap: .9rem;
+    }
+
+    .brand {
+      background: linear-gradient(135deg, #12314d, #153f64);
+      border: 1px solid #2f5577;
+      border-radius: var(--radius);
+      padding: .95rem;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: .02em;
+    }
+
+    .brand p {
+      margin: .45rem 0 0;
+      color: var(--muted);
+      font-size: .86rem;
+      line-height: 1.35;
+    }
+
+    .menu { display: grid; gap: .45rem; }
+
+    .menu button {
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text);
+      padding: .65rem .8rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: .93rem;
+    }
+
+    .menu button.active,
+    .menu button:hover {
+      background: #163553;
+      border-color: #2f5d82;
+    }
+
+    .status {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: .7rem;
+      background: rgba(16, 36, 57, .75);
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .status-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .5rem;
+    }
+
+    .pill {
+      padding: .2rem .5rem;
+      border-radius: 999px;
+      border: 1px solid #325f84;
+      font-size: .76rem;
+      color: #cde5ff;
+      background: #11314d;
+    }
+
+    .pill.ok { border-color: #229872; background: #0f3b2e; color: #b7ffe4; }
+    .pill.warn { border-color: #a56f1f; background: #3f2a0f; color: #ffe4bc; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--line);
+      padding-top: .8rem;
+      display: grid;
+      gap: .6rem;
+    }
+
+    .user-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: .65rem;
+      background: rgba(15, 33, 53, .8);
+      font-size: .86rem;
+      color: var(--muted);
+    }
+
+    .user-card strong { color: var(--text); }
+
+    .footer-actions {
+      display: flex;
+      gap: .45rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-actions button {
+      flex: 1;
+      min-width: 110px;
+      border-radius: 8px;
+      border: 1px solid #2f5d82;
+      background: #11314d;
+      color: var(--text);
+      cursor: pointer;
+      padding: .48rem .6rem;
+      font-size: .82rem;
+    }
+
+    .main {
+      padding: 1.1rem;
+      display: grid;
+      gap: .9rem;
+      align-content: start;
+    }
+
+    .main-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .8rem;
+    }
+
+    .system-cluster {
+      display: flex;
+      gap: .55rem;
+      margin-left: auto;
+    }
+
+    .traffic-item {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #0e2740;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      cursor: default;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #9a4242;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.05);
+    }
+
+    .traffic-light.green { background: #3fd188; box-shadow: 0 0 10px rgba(63, 209, 136, .5); }
+    .traffic-light.red { background: #e36464; box-shadow: 0 0 10px rgba(227, 100, 100, .5); }
+    .traffic-light.yellow { background: #f1c25d; box-shadow: 0 0 10px rgba(241, 194, 93, .5); }
+
+    .traffic-popup {
+      position: absolute;
+      right: 0;
+      top: 40px;
+      min-width: 190px;
+      background: #06182a;
+      color: #d7e9ff;
+      border: 1px solid #285275;
+      border-radius: 8px;
+      padding: .5rem .6rem;
+      font-size: .78rem;
+      line-height: 1.35;
+      box-shadow: 0 8px 22px rgba(0,0,0,.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease;
+      z-index: 10;
+    }
+
+    .traffic-item:hover .traffic-popup {
+      opacity: 1;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(16, 37, 60, .78);
+      padding: .9rem;
+    }
+
+    .panel h2 {
+      margin: 0 0 .75rem;
+      font-size: 1rem;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+
+    label {
+      display: block;
+      margin-bottom: .25rem;
+      font-size: .82rem;
+      color: var(--muted);
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid #325272;
+      border-radius: 10px;
+      padding: .55rem .62rem;
+      background: #0a1c2e;
+      color: var(--text);
+      margin-bottom: .6rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      border: 1px solid #2f5d82;
+      border-radius: 10px;
+      background: #143859;
+      color: var(--text);
+      padding: .52rem .8rem;
+      cursor: pointer;
+    }
+
+    .actions .primary {
+      background: linear-gradient(120deg, #2a7dca, #2f99ff);
+      border-color: #55aef8;
+    }
+
+    pre {
+      margin: 0;
+      background: #071a2b;
+      border: 1px solid #24445f;
+      border-radius: 10px;
+      color: #cfe8ff;
+      padding: .85rem;
+      max-height: 330px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--line); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <h1 id="title"></h1>
-  <p id="subtitle"></p>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1 id="title"></h1>
+        <p id="subtitle"></p>
+      </div>
 
-  <div class="card">
-    <label for="locale" id="localeLabel"></label>
-    <select id="locale">
-      <option value="zh-TW">繁體中文</option>
-      <option value="zh-CN">简体中文</option>
-      <option value="en">English</option>
-      <option value="es">Español</option>
-      <option value="tr">Türkçe</option>
-    </select>
+      <nav class="menu" aria-label="main menu">
+        <button class="active" type="button" id="menuOverview"></button>
+        <button type="button" id="menuAuth"></button>
+        <button type="button" id="menuProfile"></button>
+        <button type="button" id="menuOutput"></button>
+      </nav>
 
-    <label for="workspace" id="workspaceLabel"></label>
-    <input id="workspace" placeholder="00000000-0000-0000-0000-000000000000" />
+      <div class="status">
+        <div id="syncStatusLabel"></div>
+        <div class="status-badges">
+          <span class="pill" id="backendStatusPill">Backend: idle</span>
+          <span class="pill" id="authStatusPill">OAuth: idle</span>
+          <span class="pill" id="sessionStatusPill">Session: idle</span>
+        </div>
+      </div>
 
-    <button id="healthBtn"></button>
-    <button id="oauthBtn"></button>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <strong id="userLabel"></strong><br />
+          <span id="userName">guest@aegisbroker.local</span>
+        </div>
+        <div class="footer-actions">
+          <button type="button" id="quickHealthBtn"></button>
+          <button type="button" id="quickOAuthBtn"></button>
+          <button type="button" id="authToggleBtn"></button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-top">
+        <div></div>
+        <div class="system-cluster" aria-label="system health indicators">
+          <div class="traffic-item">
+            <span class="traffic-light red" id="backendLight"></span>
+            <div class="traffic-popup" id="backendLightPopup">Backend: unknown</div>
+          </div>
+          <div class="traffic-item">
+            <span class="traffic-light red" id="databaseLight"></span>
+            <div class="traffic-popup" id="databaseLightPopup">Database: unknown</div>
+          </div>
+          <div class="traffic-item">
+            <span class="traffic-light red" id="exchangeLight"></span>
+            <div class="traffic-popup" id="exchangeLightPopup">Exchange: unknown</div>
+          </div>
+        </div>
+      </div>
+
+      <section class="panel">
+        <h2 id="connectionTitle"></h2>
+        <div class="grid-2">
+          <div>
+            <label for="locale" id="localeLabel"></label>
+            <select id="locale">
+              <option value="zh-TW">繁體中文</option>
+              <option value="zh-CN">简体中文</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="tr">Türkçe</option>
+            </select>
+          </div>
+          <div>
+            <label for="workspace" id="workspaceLabel"></label>
+            <input id="workspace" placeholder="00000000-0000-0000-0000-000000000000" />
+          </div>
+        </div>
+
+        <label for="backendUrl" id="backendUrlLabel"></label>
+        <input id="backendUrl" placeholder="https://your-backend-host.zeabur.app" />
+
+        <div class="actions">
+          <button type="button" id="healthBtn"></button>
+          <button class="primary" type="button" id="oauthBtn"></button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 id="sessionTitle"></h2>
+        <label for="sessionToken" id="sessionTokenLabel"></label>
+        <input id="sessionToken" placeholder="Bearer token" />
+      </section>
+
+      <section class="panel">
+        <h2 id="profileTitle"></h2>
+        <div class="grid-2">
+          <div>
+            <label for="displayName" id="displayNameLabel"></label>
+            <input id="displayName" placeholder="display name" />
+          </div>
+          <div>
+            <label for="avatarUrl" id="avatarUrlLabel"></label>
+            <input id="avatarUrl" placeholder="https://example.com/avatar.png" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label for="profileLocale" id="profileLocaleLabel"></label>
+            <select id="profileLocale">
+              <option value="zh-TW">zh-TW</option>
+              <option value="zh-CN">zh-CN</option>
+              <option value="en">en</option>
+              <option value="es">es</option>
+              <option value="tr">tr</option>
+            </select>
+          </div>
+          <div>
+            <label for="reasonCode" id="reasonCodeLabel"></label>
+            <input id="reasonCode" value="PROFILE_SELF_UPDATE" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="loadProfileBtn"></button>
+          <button type="button" id="saveProfileBtn"></button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 id="outputLabel"></h2>
+        <pre id="output">-</pre>
+      </section>
+    </main>
   </div>
 
-  <div class="card">
-    <strong id="sessionTitle"></strong>
-    <label for="sessionToken" id="sessionTokenLabel"></label>
-    <input id="sessionToken" placeholder="Bearer token" />
-  </div>
-
-  <div class="card">
-    <strong id="profileTitle"></strong>
-    <div class="row">
-      <div>
-        <label for="displayName" id="displayNameLabel"></label>
-        <input id="displayName" placeholder="display name" />
-      </div>
-      <div>
-        <label for="avatarUrl" id="avatarUrlLabel"></label>
-        <input id="avatarUrl" placeholder="https://example.com/avatar.png" />
-      </div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label for="profileLocale" id="profileLocaleLabel"></label>
-        <select id="profileLocale">
-          <option value="zh-TW">zh-TW</option>
-          <option value="zh-CN">zh-CN</option>
-          <option value="en">en</option>
-          <option value="es">es</option>
-          <option value="tr">tr</option>
-        </select>
-      </div>
-      <div>
-        <label for="reasonCode" id="reasonCodeLabel"></label>
-        <input id="reasonCode" value="PROFILE_SELF_UPDATE" />
-      </div>
-    </div>
-
-    <button id="loadProfileBtn"></button>
-    <button id="saveProfileBtn"></button>
-  </div>
-
-  <div class="card">
-    <strong id="outputLabel"></strong>
-    <pre id="output">-</pre>
-  </div>
-
+<script src="/config.js"></script>
 <script>
 const i18n = {
   "zh-TW": {
-    title: "AegisBroker 控制台（v0.1.1）",
-    subtitle: "支援多語切換、健康檢查、Google OAuth、個人資料讀寫。",
+    title: "AegisBroker 控制台（v0.1.2）",
+    subtitle: "冷色調控制台、左側選單、右側內容、OAuth / Profile 操作。",
+    menuOverview: "總覽",
+    menuAuth: "身分與登入",
+    menuProfile: "個人資料",
+    menuOutput: "事件輸出",
+    syncStatusLabel: "用戶狀態同步",
+    userLabel: "目前用戶",
+    quickHealthBtn: "快速健康檢查",
+    quickOAuthBtn: "快速 OAuth",
+    authToggleBtnLogin: "登入",
+    authToggleBtnLogout: "登出",
+    authToggleNeedToken: "請先填入 Session Token 再切換為登入狀態",
+    connectionTitle: "連線設定",
     localeLabel: "語言",
     workspaceLabel: "Workspace ID",
+    backendUrlLabel: "Backend API Base URL",
     healthBtn: "檢查後端健康狀態",
     oauthBtn: "啟動 Google 登入",
     sessionTitle: "Session",
@@ -98,13 +453,27 @@ const i18n = {
     loadProfileBtn: "讀取我的 Profile",
     saveProfileBtn: "儲存我的 Profile",
     outputLabel: "輸出",
-    sessionRequired: "請先填入 session token"
+    sessionRequired: "請先填入 session token",
+    workspaceRequired: "請先填入 Workspace ID"
   },
   "zh-CN": {
-    title: "AegisBroker 控制台（v0.1.1）",
-    subtitle: "支持多语言切换、健康检查、Google OAuth、个人资料读写。",
+    title: "AegisBroker 控制台（v0.1.2）",
+    subtitle: "冷色控制台、左侧菜单、右侧主内容、OAuth / Profile 操作。",
+    menuOverview: "总览",
+    menuAuth: "身份与登录",
+    menuProfile: "个人资料",
+    menuOutput: "事件输出",
+    syncStatusLabel: "用户状态同步",
+    userLabel: "当前用户",
+    quickHealthBtn: "快速健康检查",
+    quickOAuthBtn: "快速 OAuth",
+    authToggleBtnLogin: "登录",
+    authToggleBtnLogout: "登出",
+    authToggleNeedToken: "请先填写 Session Token 再切换为登录状态",
+    connectionTitle: "连接配置",
     localeLabel: "语言",
     workspaceLabel: "Workspace ID",
+    backendUrlLabel: "Backend API Base URL",
     healthBtn: "检查后端健康状态",
     oauthBtn: "启动 Google 登录",
     sessionTitle: "Session",
@@ -117,13 +486,27 @@ const i18n = {
     loadProfileBtn: "读取我的 Profile",
     saveProfileBtn: "保存我的 Profile",
     outputLabel: "输出",
-    sessionRequired: "请先填写 session token"
+    sessionRequired: "请先填写 session token",
+    workspaceRequired: "请先填写 Workspace ID"
   },
   "en": {
-    title: "AegisBroker Console (v0.1.1)",
-    subtitle: "Includes locale switching, health checks, Google OAuth, and profile read/write.",
+    title: "AegisBroker Console (v0.1.2)",
+    subtitle: "Cool-tone dashboard with left menu, right content area, OAuth and profile controls.",
+    menuOverview: "Overview",
+    menuAuth: "Identity & Login",
+    menuProfile: "Profile",
+    menuOutput: "Event Output",
+    syncStatusLabel: "User Status Sync",
+    userLabel: "Current User",
+    quickHealthBtn: "Quick Health Check",
+    quickOAuthBtn: "Quick OAuth",
+    authToggleBtnLogin: "Login",
+    authToggleBtnLogout: "Logout",
+    authToggleNeedToken: "Please fill Session Token before switching to login state",
+    connectionTitle: "Connection Settings",
     localeLabel: "Language",
     workspaceLabel: "Workspace ID",
+    backendUrlLabel: "Backend API Base URL",
     healthBtn: "Check Backend Health",
     oauthBtn: "Start Google Login",
     sessionTitle: "Session",
@@ -136,13 +519,27 @@ const i18n = {
     loadProfileBtn: "Load My Profile",
     saveProfileBtn: "Save My Profile",
     outputLabel: "Output",
-    sessionRequired: "Please provide a session token first"
+    sessionRequired: "Please provide a session token first",
+    workspaceRequired: "Please provide a Workspace ID first"
   },
   "es": {
-    title: "Consola AegisBroker (v0.1.1)",
-    subtitle: "Incluye cambio de idioma, health checks, Google OAuth y lectura/escritura de perfil.",
+    title: "Consola AegisBroker (v0.1.2)",
+    subtitle: "Panel en tonos fríos con menú lateral, contenido principal y OAuth / perfil.",
+    menuOverview: "Resumen",
+    menuAuth: "Identidad y acceso",
+    menuProfile: "Perfil",
+    menuOutput: "Salida de eventos",
+    syncStatusLabel: "Sincronización de estado de usuario",
+    userLabel: "Usuario actual",
+    quickHealthBtn: "Chequeo rápido de salud",
+    quickOAuthBtn: "OAuth rápido",
+    authToggleBtnLogin: "Iniciar sesión",
+    authToggleBtnLogout: "Cerrar sesión",
+    authToggleNeedToken: "Ingresa Session Token antes de cambiar a estado autenticado",
+    connectionTitle: "Configuración de conexión",
     localeLabel: "Idioma",
     workspaceLabel: "Workspace ID",
+    backendUrlLabel: "URL Base del Backend API",
     healthBtn: "Verificar Salud del Backend",
     oauthBtn: "Iniciar Login con Google",
     sessionTitle: "Session",
@@ -155,13 +552,27 @@ const i18n = {
     loadProfileBtn: "Cargar Mi Perfil",
     saveProfileBtn: "Guardar Mi Perfil",
     outputLabel: "Salida",
-    sessionRequired: "Primero ingresa un session token"
+    sessionRequired: "Primero ingresa un session token",
+    workspaceRequired: "Primero ingresa un Workspace ID"
   },
   "tr": {
-    title: "AegisBroker Konsolu (v0.1.1)",
-    subtitle: "Dil değişimi, sağlık kontrolü, Google OAuth ve profil okuma/yazma içerir.",
+    title: "AegisBroker Konsolu (v0.1.2)",
+    subtitle: "Soğuk tonlu panel, solda menü, sağda ana içerik ve OAuth/profil işlemleri.",
+    menuOverview: "Genel Bakış",
+    menuAuth: "Kimlik ve Giriş",
+    menuProfile: "Profil",
+    menuOutput: "Olay Çıktısı",
+    syncStatusLabel: "Kullanıcı Durumu Senkronizasyonu",
+    userLabel: "Mevcut Kullanıcı",
+    quickHealthBtn: "Hızlı Sağlık Kontrolü",
+    quickOAuthBtn: "Hızlı OAuth",
+    authToggleBtnLogin: "Giriş",
+    authToggleBtnLogout: "Çıkış",
+    authToggleNeedToken: "Giriş durumuna geçmeden önce Session Token girin",
+    connectionTitle: "Bağlantı Ayarları",
     localeLabel: "Dil",
     workspaceLabel: "Workspace ID",
+    backendUrlLabel: "Backend API Temel URL",
     healthBtn: "Backend Sağlığını Kontrol Et",
     oauthBtn: "Google Girişi Başlat",
     sessionTitle: "Session",
@@ -174,12 +585,30 @@ const i18n = {
     loadProfileBtn: "Profilimi Yükle",
     saveProfileBtn: "Profilimi Kaydet",
     outputLabel: "Çıktı",
-    sessionRequired: "Önce session token girin"
+    sessionRequired: "Önce session token girin",
+    workspaceRequired: "Önce Workspace ID girin"
   }
 };
 
+const runtimeConfig = window.__AEGIS_CONFIG__ || {};
+const LOCAL_STORAGE_BACKEND_KEY = 'aegis.backendBaseUrl';
+
 const outputEl = document.getElementById('output');
 const localeEl = document.getElementById('locale');
+const backendUrlEl = document.getElementById('backendUrl');
+const sessionTokenEl = document.getElementById('sessionToken');
+const userNameEl = document.getElementById('userName');
+const authToggleBtnEl = document.getElementById('authToggleBtn');
+const backendStatusPill = document.getElementById('backendStatusPill');
+const authStatusPill = document.getElementById('authStatusPill');
+const sessionStatusPill = document.getElementById('sessionStatusPill');
+const backendLight = document.getElementById('backendLight');
+const backendLightPopup = document.getElementById('backendLightPopup');
+const databaseLight = document.getElementById('databaseLight');
+const databaseLightPopup = document.getElementById('databaseLightPopup');
+const exchangeLight = document.getElementById('exchangeLight');
+const exchangeLightPopup = document.getElementById('exchangeLightPopup');
+let isLoggedIn = false;
 
 function t() {
   return i18n[localeEl.value] || i18n['zh-TW'];
@@ -191,41 +620,237 @@ function render(locale) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
   });
+  authToggleBtnEl.textContent = isLoggedIn ? t().authToggleBtnLogout : t().authToggleBtnLogin;
+}
+
+function setPill(el, text, mode = 'idle') {
+  el.textContent = text;
+  el.classList.remove('ok', 'warn');
+  if (mode === 'ok') el.classList.add('ok');
+  if (mode === 'warn') el.classList.add('warn');
+}
+
+function setStatuses({ backend = null, auth = null, session = null } = {}) {
+  if (backend) setPill(backendStatusPill, `Backend: ${backend.text}`, backend.mode);
+  if (auth) setPill(authStatusPill, `OAuth: ${auth.text}`, auth.mode);
+  if (session) setPill(sessionStatusPill, `Session: ${session.text}`, session.mode);
+}
+
+function setSystemLight(lightEl, popupEl, name, mode, summary) {
+  lightEl.classList.remove('green', 'red', 'yellow');
+  lightEl.classList.add(mode);
+  popupEl.textContent = `${name}: ${summary}`;
+}
+
+function syncLoginState(nextLoggedIn) {
+  isLoggedIn = nextLoggedIn;
+  authToggleBtnEl.textContent = isLoggedIn ? t().authToggleBtnLogout : t().authToggleBtnLogin;
+  if (!isLoggedIn) {
+    sessionTokenEl.value = '';
+    userNameEl.textContent = 'guest@aegisbroker.local';
+    setStatuses({
+      session: { text: 'logged_out', mode: 'warn' },
+      auth: { text: 'idle', mode: 'idle' },
+    });
+  } else {
+    setStatuses({
+      session: { text: 'logged_in', mode: 'ok' },
+      auth: { text: 'enabled', mode: 'ok' },
+    });
+  }
 }
 
 localeEl.addEventListener('change', () => render(localeEl.value));
-render('zh-TW');
+const defaultLocale = runtimeConfig.DEFAULT_LOCALE || 'zh-TW';
+if ([...localeEl.options].some(option => option.value === defaultLocale)) {
+  localeEl.value = defaultLocale;
+}
+render(localeEl.value);
+setStatuses({ backend: { text: 'idle' }, auth: { text: 'idle' }, session: { text: 'idle' } });
+setSystemLight(backendLight, backendLightPopup, 'Backend 狀態', 'red', '未檢查');
+setSystemLight(databaseLight, databaseLightPopup, '資料庫狀態', 'red', '未檢查');
+setSystemLight(exchangeLight, exchangeLightPopup, '外部交易所狀態', 'yellow', '未知（等待同步）');
 
-const backend = location.origin.replace(/:3000$/, ':8080');
+function normalizeBaseUrl(url) {
+  return url.replace(/\/$/, '');
+}
+
+function isHttpUrl(url) {
+  return /^https?:\/\//i.test(url);
+}
+
+function resolveBackendBaseUrl() {
+  const search = new URLSearchParams(location.search);
+  const fromQuery = (search.get('backend_base_url') || search.get('backend') || '').trim();
+  if (fromQuery && isHttpUrl(fromQuery)) {
+    return normalizeBaseUrl(fromQuery);
+  }
+
+  const fromStorage = (localStorage.getItem(LOCAL_STORAGE_BACKEND_KEY) || '').trim();
+  if (fromStorage && isHttpUrl(fromStorage)) {
+    return normalizeBaseUrl(fromStorage);
+  }
+
+  const configured = (runtimeConfig.BACKEND_API_BASE_URL || '').trim();
+  if (configured && isHttpUrl(configured)) {
+    return normalizeBaseUrl(configured);
+  }
+
+  const isLocalHost = ['localhost', '127.0.0.1'].includes(location.hostname);
+  if (isLocalHost) {
+    return `${location.protocol}//${location.hostname}:8080`;
+  }
+
+  return location.origin;
+}
+
+let backend = resolveBackendBaseUrl();
+backendUrlEl.value = backend;
+
+backendUrlEl.addEventListener('change', () => {
+  const next = backendUrlEl.value.trim();
+  if (!next) {
+    localStorage.removeItem(LOCAL_STORAGE_BACKEND_KEY);
+    outputEl.textContent = JSON.stringify({ status: 'cleared', note: 'Reload page to use fallback backend URL.' }, null, 2);
+    return;
+  }
+  if (!isHttpUrl(next)) {
+    outputEl.textContent = JSON.stringify(
+      {
+        error_code: 'INVALID_BACKEND_URL',
+        message: 'Backend API Base URL must start with http:// or https://',
+      },
+      null,
+      2
+    );
+    return;
+  }
+  localStorage.setItem(LOCAL_STORAGE_BACKEND_KEY, normalizeBaseUrl(next));
+  outputEl.textContent = JSON.stringify(
+    {
+      status: 'saved',
+      backend_api_base_url: normalizeBaseUrl(next),
+      note: 'Reload page to apply new backend URL.',
+    },
+    null,
+    2
+  );
+});
+
+sessionTokenEl.addEventListener('input', () => {
+  const hasToken = !!sessionTokenEl.value.trim();
+  setStatuses({ session: { text: hasToken ? 'token_ready' : 'idle', mode: hasToken ? 'ok' : 'idle' } });
+  if (!isLoggedIn) {
+    userNameEl.textContent = hasToken ? 'token prepared (not logged in)' : 'guest@aegisbroker.local';
+  }
+});
 
 function authHeaders() {
-  const token = document.getElementById('sessionToken').value.trim();
+  const token = sessionTokenEl.value.trim();
   if (!token) {
     throw new Error(t().sessionRequired);
   }
   return { Authorization: `Bearer ${token}` };
 }
 
+async function parseResponseBody(resp) {
+  const contentType = resp.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return resp.json().catch(() => ({ error: 'invalid_json_response' }));
+  }
+  const text = await resp.text();
+  return {
+    error: 'non_json_response',
+    content_type: contentType || null,
+    body_preview: text.slice(0, 200),
+  };
+}
+
 async function printJson(resp) {
-  const body = await resp.json().catch(() => ({ error: 'invalid_json_response' }));
+  const body = await parseResponseBody(resp);
   outputEl.textContent = JSON.stringify({ status: resp.status, body }, null, 2);
   return { resp, body };
 }
 
-document.getElementById('healthBtn').onclick = async () => {
-  const [live, ready] = await Promise.all([
-    fetch(`${backend}/health/live`).then(r => r.json()),
-    fetch(`${backend}/health/ready`).then(r => r.json()).catch(async (err) => ({ error: String(err) }))
-  ]);
-  outputEl.textContent = JSON.stringify({ live, ready }, null, 2);
-};
+async function runHealthCheck() {
+  setStatuses({ backend: { text: 'checking', mode: 'warn' } });
+  setSystemLight(backendLight, backendLightPopup, 'Backend 狀態', 'yellow', '健康檢查中');
+  setSystemLight(databaseLight, databaseLightPopup, '資料庫狀態', 'yellow', '健康檢查中');
+  try {
+    const [liveResp, readyResp] = await Promise.all([
+      fetch(`${backend}/health/live`),
+      fetch(`${backend}/health/ready`).catch((err) => ({ network_error: String(err) }))
+    ]);
 
-document.getElementById('oauthBtn').onclick = async () => {
-  const workspace = document.getElementById('workspace').value.trim();
-  const resp = await fetch(`${backend}/auth/google/start?workspace_id=${encodeURIComponent(workspace)}`);
-  const body = await resp.json();
-  outputEl.textContent = JSON.stringify(body, null, 2);
-  if (resp.ok && body.auth_url) window.open(body.auth_url, '_blank');
+    if (liveResp.network_error || readyResp.network_error) {
+      outputEl.textContent = JSON.stringify({ live: liveResp, ready: readyResp }, null, 2);
+      setStatuses({ backend: { text: 'network_error', mode: 'warn' } });
+      setSystemLight(backendLight, backendLightPopup, 'Backend 狀態', 'red', '連線錯誤');
+      setSystemLight(databaseLight, databaseLightPopup, '資料庫狀態', 'red', '連線錯誤');
+      setSystemLight(exchangeLight, exchangeLightPopup, '外部交易所狀態', 'yellow', '未知（尚未接入）');
+      return;
+    }
+
+    const live = await parseResponseBody(liveResp);
+    const ready = await parseResponseBody(readyResp);
+    outputEl.textContent = JSON.stringify(
+      { live: { status: liveResp.status, body: live }, ready: { status: readyResp.status, body: ready } },
+      null,
+      2
+    );
+
+    const ok = liveResp.ok && readyResp.ok;
+    setStatuses({ backend: { text: ok ? 'healthy' : 'degraded', mode: ok ? 'ok' : 'warn' } });
+    setSystemLight(backendLight, backendLightPopup, 'Backend 狀態', liveResp.ok ? 'green' : 'red', liveResp.ok ? '服務正常' : '服務異常');
+    setSystemLight(databaseLight, databaseLightPopup, '資料庫狀態', readyResp.ok ? 'green' : 'red', readyResp.ok ? '資料庫連線正常' : '資料庫尚未就緒');
+    setSystemLight(exchangeLight, exchangeLightPopup, '外部交易所狀態', 'yellow', '未配置健康檢查端點（預設未知）');
+  } catch (err) {
+    setStatuses({ backend: { text: 'failed', mode: 'warn' } });
+    outputEl.textContent = JSON.stringify({ error: String(err) }, null, 2);
+    setSystemLight(backendLight, backendLightPopup, 'Backend 狀態', 'red', '健康檢查失敗');
+    setSystemLight(databaseLight, databaseLightPopup, '資料庫狀態', 'red', '健康檢查失敗');
+    setSystemLight(exchangeLight, exchangeLightPopup, '外部交易所狀態', 'yellow', '未知（尚未接入）');
+  }
+}
+
+async function runOAuthStart() {
+  try {
+    const workspace = document.getElementById('workspace').value.trim();
+    if (!workspace) {
+      throw new Error(t().workspaceRequired);
+    }
+
+    setStatuses({ auth: { text: 'requesting', mode: 'warn' } });
+    const resp = await fetch(`${backend}/auth/google/start?workspace_id=${encodeURIComponent(workspace)}`);
+    const { body } = await printJson(resp);
+
+    if (resp.ok && body.auth_url) {
+      window.open(body.auth_url, '_blank');
+      setStatuses({ auth: { text: 'redirected', mode: 'ok' } });
+      return;
+    }
+
+    setStatuses({ auth: { text: 'failed', mode: 'warn' } });
+  } catch (err) {
+    setStatuses({ auth: { text: 'failed', mode: 'warn' } });
+    outputEl.textContent = String(err.message || err);
+  }
+}
+
+document.getElementById('healthBtn').onclick = runHealthCheck;
+document.getElementById('quickHealthBtn').onclick = runHealthCheck;
+document.getElementById('oauthBtn').onclick = runOAuthStart;
+document.getElementById('quickOAuthBtn').onclick = runOAuthStart;
+authToggleBtnEl.onclick = () => {
+  if (isLoggedIn) {
+    syncLoginState(false);
+    return;
+  }
+  if (!sessionTokenEl.value.trim()) {
+    outputEl.textContent = t().authToggleNeedToken;
+    return;
+  }
+  syncLoginState(true);
 };
 
 document.getElementById('loadProfileBtn').onclick = async () => {
@@ -236,8 +861,12 @@ document.getElementById('loadProfileBtn').onclick = async () => {
       document.getElementById('displayName').value = body.display_name || '';
       document.getElementById('avatarUrl').value = body.avatar_url || '';
       document.getElementById('profileLocale').value = body.locale || localeEl.value;
+      if (body.email) userNameEl.textContent = body.email;
+      syncLoginState(true);
+      setStatuses({ session: { text: 'active', mode: 'ok' } });
     }
   } catch (err) {
+    setStatuses({ session: { text: 'error', mode: 'warn' } });
     outputEl.textContent = String(err.message || err);
   }
 };
@@ -259,7 +888,9 @@ document.getElementById('saveProfileBtn').onclick = async () => {
       body: JSON.stringify(payload)
     });
     await printJson(resp);
+    setStatuses({ session: { text: resp.ok ? 'profile_saved' : 'save_failed', mode: resp.ok ? 'ok' : 'warn' } });
   } catch (err) {
+    setStatuses({ session: { text: 'error', mode: 'warn' } });
     outputEl.textContent = String(err.message || err);
   }
 };
