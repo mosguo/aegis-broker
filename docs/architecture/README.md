@@ -9,6 +9,8 @@
 5. `../../AegisBroker_Financial_Control_Reconciliation_Spec.md`
 6. `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec.md`
 7. `../../AegisBroker_role_permission_api_db_ledger_mapping.md`
+8. `./Development_Plan.md`
+9. `../../AegisBroker_Config_Management_Spec.md`
 
 > 註：AGENTS.md 的通用檔名為語意名稱；目前主檔名不含版本後綴，未來若需版控後綴統一使用 `_v1.1` 規則。
 
@@ -23,10 +25,12 @@
 | PLAN-FIN | Financial Control Reconciliation Spec | `../../AegisBroker_Financial_Control_Reconciliation_Spec.md` | ✅ 已確認 |
 | PLAN-LEDGER | Double Entry Ledger Accounting Spec | `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec.md` | ✅ 已確認 |
 | PLAN-RBAC | Role Permission API/DB/Ledger Mapping Spec | `../../AegisBroker_role_permission_api_db_ledger_mapping.md` | ✅ 已確認 |
+| PLAN-DEV | Development Plan - Multilingual Principle | `./Development_Plan.md` | ✅ 已確認 |
+| PLAN-CFG | Config Management Spec | `../../AegisBroker_Config_Management_Spec.md` | ✅ 已確認 |
 
 ## 目前發行版本
 
-- Repository Version: `0.0.9`
+- Repository Version: `0.1.1`
 - Spec Baseline Filename Rule: `no suffix (future: _v1.1)`
 
 ## 開發階段代號與名稱（對齊 AGENTS.md Build Order）

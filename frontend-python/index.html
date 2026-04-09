@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AegisBroker v0.1.1</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 920px; margin: 2rem auto; padding: 0 1rem; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; margin-top: 1rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+    button { padding: .5rem .9rem; border-radius: 8px; border: 1px solid #444; cursor: pointer; margin-right: .4rem; margin-top: .2rem; }
+    input, select { padding: .45rem; border-radius: 8px; border: 1px solid #bbb; width: 100%; margin: .25rem 0 .8rem; }
+    pre { background: #111; color: #f3f3f3; padding: .8rem; border-radius: 8px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1 id="title"></h1>
+  <p id="subtitle"></p>
+
+  <div class="card">
+    <label for="locale" id="localeLabel"></label>
+    <select id="locale">
+      <option value="zh-TW">繁體中文</option>
+      <option value="zh-CN">简体中文</option>
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="tr">Türkçe</option>
+    </select>
+
+    <label for="workspace" id="workspaceLabel"></label>
+    <input id="workspace" placeholder="00000000-0000-0000-0000-000000000000" />
+
+    <button id="healthBtn"></button>
+    <button id="oauthBtn"></button>
+  </div>
+
+  <div class="card">
+    <strong id="sessionTitle"></strong>
+    <label for="sessionToken" id="sessionTokenLabel"></label>
+    <input id="sessionToken" placeholder="Bearer token" />
+  </div>
+
+  <div class="card">
+    <strong id="profileTitle"></strong>
+    <div class="row">
+      <div>
+        <label for="displayName" id="displayNameLabel"></label>
+        <input id="displayName" placeholder="display name" />
+      </div>
+      <div>
+        <label for="avatarUrl" id="avatarUrlLabel"></label>
+        <input id="avatarUrl" placeholder="https://example.com/avatar.png" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="profileLocale" id="profileLocaleLabel"></label>
+        <select id="profileLocale">
+          <option value="zh-TW">zh-TW</option>
+          <option value="zh-CN">zh-CN</option>
+          <option value="en">en</option>
+          <option value="es">es</option>
+          <option value="tr">tr</option>
+        </select>
+      </div>
+      <div>
+        <label for="reasonCode" id="reasonCodeLabel"></label>
+        <input id="reasonCode" value="PROFILE_SELF_UPDATE" />
+      </div>
+    </div>
+
+    <button id="loadProfileBtn"></button>
+    <button id="saveProfileBtn"></button>
+  </div>
+
+  <div class="card">
+    <strong id="outputLabel"></strong>
+    <pre id="output">-</pre>
+  </div>
+
+<script>
+const i18n = {
+  "zh-TW": {
+    title: "AegisBroker 控制台（v0.1.1）",
+    subtitle: "支援多語切換、健康檢查、Google OAuth、個人資料讀寫。",
+    localeLabel: "語言",
+    workspaceLabel: "Workspace ID",
+    healthBtn: "檢查後端健康狀態",
+    oauthBtn: "啟動 Google 登入",
+    sessionTitle: "Session",
+    sessionTokenLabel: "Session Token（直接貼上 token）",
+    profileTitle: "個人資料",
+    displayNameLabel: "顯示名稱",
+    avatarUrlLabel: "頭像網址",
+    profileLocaleLabel: "個人語系",
+    reasonCodeLabel: "理由碼",
+    loadProfileBtn: "讀取我的 Profile",
+    saveProfileBtn: "儲存我的 Profile",
+    outputLabel: "輸出",
+    sessionRequired: "請先填入 session token"
+  },
+  "zh-CN": {
+    title: "AegisBroker 控制台（v0.1.1）",
+    subtitle: "支持多语言切换、健康检查、Google OAuth、个人资料读写。",
+    localeLabel: "语言",
+    workspaceLabel: "Workspace ID",
+    healthBtn: "检查后端健康状态",
+    oauthBtn: "启动 Google 登录",
+    sessionTitle: "Session",
+    sessionTokenLabel: "Session Token（直接粘贴 token）",
+    profileTitle: "个人资料",
+    displayNameLabel: "显示名称",
+    avatarUrlLabel: "头像 URL",
+    profileLocaleLabel: "个人语言",
+    reasonCodeLabel: "原因码",
+    loadProfileBtn: "读取我的 Profile",
+    saveProfileBtn: "保存我的 Profile",
+    outputLabel: "输出",
+    sessionRequired: "请先填写 session token"
+  },
+  "en": {
+    title: "AegisBroker Console (v0.1.1)",
+    subtitle: "Includes locale switching, health checks, Google OAuth, and profile read/write.",
+    localeLabel: "Language",
+    workspaceLabel: "Workspace ID",
+    healthBtn: "Check Backend Health",
+    oauthBtn: "Start Google Login",
+    sessionTitle: "Session",
+    sessionTokenLabel: "Session Token (paste token directly)",
+    profileTitle: "Profile",
+    displayNameLabel: "Display Name",
+    avatarUrlLabel: "Avatar URL",
+    profileLocaleLabel: "Profile Locale",
+    reasonCodeLabel: "Reason Code",
+    loadProfileBtn: "Load My Profile",
+    saveProfileBtn: "Save My Profile",
+    outputLabel: "Output",
+    sessionRequired: "Please provide a session token first"
+  },
+  "es": {
+    title: "Consola AegisBroker (v0.1.1)",
+    subtitle: "Incluye cambio de idioma, health checks, Google OAuth y lectura/escritura de perfil.",
+    localeLabel: "Idioma",
+    workspaceLabel: "Workspace ID",
+    healthBtn: "Verificar Salud del Backend",
+    oauthBtn: "Iniciar Login con Google",
+    sessionTitle: "Session",
+    sessionTokenLabel: "Session Token (pegar token directamente)",
+    profileTitle: "Perfil",
+    displayNameLabel: "Nombre visible",
+    avatarUrlLabel: "URL de avatar",
+    profileLocaleLabel: "Idioma de perfil",
+    reasonCodeLabel: "Código de razón",
+    loadProfileBtn: "Cargar Mi Perfil",
+    saveProfileBtn: "Guardar Mi Perfil",
+    outputLabel: "Salida",
+    sessionRequired: "Primero ingresa un session token"
+  },
+  "tr": {
+    title: "AegisBroker Konsolu (v0.1.1)",
+    subtitle: "Dil değişimi, sağlık kontrolü, Google OAuth ve profil okuma/yazma içerir.",
+    localeLabel: "Dil",
+    workspaceLabel: "Workspace ID",
+    healthBtn: "Backend Sağlığını Kontrol Et",
+    oauthBtn: "Google Girişi Başlat",
+    sessionTitle: "Session",
+    sessionTokenLabel: "Session Token (token'ı doğrudan yapıştırın)",
+    profileTitle: "Profil",
+    displayNameLabel: "Görünen Ad",
+    avatarUrlLabel: "Avatar URL",
+    profileLocaleLabel: "Profil Dili",
+    reasonCodeLabel: "Neden Kodu",
+    loadProfileBtn: "Profilimi Yükle",
+    saveProfileBtn: "Profilimi Kaydet",
+    outputLabel: "Çıktı",
+    sessionRequired: "Önce session token girin"
+  }
+};
+
+const outputEl = document.getElementById('output');
+const localeEl = document.getElementById('locale');
+
+function t() {
+  return i18n[localeEl.value] || i18n['zh-TW'];
+}
+
+function render(locale) {
+  const localeMap = i18n[locale] || i18n['zh-TW'];
+  Object.entries(localeMap).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+}
+
+localeEl.addEventListener('change', () => render(localeEl.value));
+render('zh-TW');
+
+const backend = location.origin.replace(/:3000$/, ':8080');
+
+function authHeaders() {
+  const token = document.getElementById('sessionToken').value.trim();
+  if (!token) {
+    throw new Error(t().sessionRequired);
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
+async function printJson(resp) {
+  const body = await resp.json().catch(() => ({ error: 'invalid_json_response' }));
+  outputEl.textContent = JSON.stringify({ status: resp.status, body }, null, 2);
+  return { resp, body };
+}
+
+document.getElementById('healthBtn').onclick = async () => {
+  const [live, ready] = await Promise.all([
+    fetch(`${backend}/health/live`).then(r => r.json()),
+    fetch(`${backend}/health/ready`).then(r => r.json()).catch(async (err) => ({ error: String(err) }))
+  ]);
+  outputEl.textContent = JSON.stringify({ live, ready }, null, 2);
+};
+
+document.getElementById('oauthBtn').onclick = async () => {
+  const workspace = document.getElementById('workspace').value.trim();
+  const resp = await fetch(`${backend}/auth/google/start?workspace_id=${encodeURIComponent(workspace)}`);
+  const body = await resp.json();
+  outputEl.textContent = JSON.stringify(body, null, 2);
+  if (resp.ok && body.auth_url) window.open(body.auth_url, '_blank');
+};
+
+document.getElementById('loadProfileBtn').onclick = async () => {
+  try {
+    const resp = await fetch(`${backend}/v1/me/profile`, { headers: authHeaders() });
+    const { body } = await printJson(resp);
+    if (resp.ok) {
+      document.getElementById('displayName').value = body.display_name || '';
+      document.getElementById('avatarUrl').value = body.avatar_url || '';
+      document.getElementById('profileLocale').value = body.locale || localeEl.value;
+    }
+  } catch (err) {
+    outputEl.textContent = String(err.message || err);
+  }
+};
+
+document.getElementById('saveProfileBtn').onclick = async () => {
+  try {
+    const payload = {
+      display_name: document.getElementById('displayName').value,
+      avatar_url: document.getElementById('avatarUrl').value,
+      locale: document.getElementById('profileLocale').value,
+      reason_code: document.getElementById('reasonCode').value
+    };
+    const resp = await fetch(`${backend}/v1/me/profile`, {
+      method: 'PUT',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    await printJson(resp);
+  } catch (err) {
+    outputEl.textContent = String(err.message || err);
+  }
+};
+</script>
+</body>
+</html>
