@@ -2,6 +2,10 @@
 
 AegisBroker 是面向大宗商品經紀業務的事件驅動控制型系統。
 
+- Repository Version: `0.0.9`
+- Spec Baseline: `v0.9.0`
+- Next Milestone: `v0.1.0`
+
 ## Repository Layout
 
 ```text
@@ -45,4 +49,11 @@ Health endpoints:
 
 ## Architecture Sources
 
-請先閱讀 `docs/architecture/README.md` 對應的 v1.1 規格文件後再進行核心流程開發。
+請先閱讀 `docs/architecture/README.md` 對應的 v0.9.0 規格文件後再進行核心流程開發。
+
+## v0.1.0 Goals
+
+1. 多國語言：繁中、簡中、英文、西班牙文、土耳其語
+2. Zeabur 前端/後端/資料庫部署組態檔完成
+3. Google OAuth 實際登入流程
+4. User Profile + Role/Permission 對應與可編輯角色設定

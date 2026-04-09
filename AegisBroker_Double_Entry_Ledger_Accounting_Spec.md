@@ -1,5 +1,5 @@
 # AegisBroker — Double-entry Ledger & Accounting Spec
-Version: v1.0  
+Version: v0.9.0  
 Status: Accounting Layer Blueprint  
 Target deployment: ZEABUR  
 Related documents:

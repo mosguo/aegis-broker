@@ -1,5 +1,5 @@
 # AegisBroker — Rust API Contract Spec
-Version: v1.1  
+Version: v0.9.0  
 Status: Blueprint-ready / Repo-ready API baseline  
 Target deployment: ZEABUR  
 Primary backend stack: Rust + Axum + SQLx + Tokio + OpenTelemetry  
