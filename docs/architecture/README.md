@@ -2,32 +2,32 @@
 
 以下為目前版本化的架構基線（v0.9.0）：
 
-1. `../../Core_Event_Audit_Architecture_Spec_WorkItem_List_AegisBroker_v0.9.0.md`
-2. `../../AegisBroker_PostgreSQL_Schema_Migration_Spec_v0.9.0.md`
-3. `../../AegisBroker_Rust_API_Contract_Spec_v0.9.0.md`
-4. `../../AegisBroker_ZEABUR_Deployment_Repo_Blueprintr_v0.9.0.md`
-5. `../../AegisBroker_Financial_Control_Reconciliation_Spec_v0.9.0.md`
-6. `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec_v0.9.0.md`
+1. `../../Core_Event_Audit_Architecture_Spec_WorkItem_List_AegisBroker.md`
+2. `../../AegisBroker_PostgreSQL_Schema_Migration_Spec.md`
+3. `../../AegisBroker_Rust_API_Contract_Spec.md`
+4. `../../AegisBroker_ZEABUR_Deployment_Repo_Blueprintr.md`
+5. `../../AegisBroker_Financial_Control_Reconciliation_Spec.md`
+6. `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec.md`
 7. `aegis_broker_role_permission_api_db_ledger_mapping.md`
 
-> 註：AGENTS.md 的通用檔名為語意名稱；本專案實際檔名以 `_v0.9.0` 後綴文件為主。
+> 註：AGENTS.md 的通用檔名為語意名稱；目前主檔名不含版本後綴，未來若需版控後綴統一使用 `_v1.1` 規則。
 
 ## 計劃文件確認狀態（2026-04-09）
 
 | 文件代號 | 文件名稱 | 檔案路徑 | 狀態 |
 |---|---|---|---|
-| PLAN-CEA | Core Event & Audit Architecture Spec & WorkItem List | `../../Core_Event_Audit_Architecture_Spec_WorkItem_List_AegisBroker_v0.9.0.md` | ✅ 已確認 |
-| PLAN-DB | PostgreSQL Schema & Migration Spec | `../../AegisBroker_PostgreSQL_Schema_Migration_Spec_v0.9.0.md` | ✅ 已確認 |
-| PLAN-API | Rust API Contract Spec | `../../AegisBroker_Rust_API_Contract_Spec_v0.9.0.md` | ✅ 已確認 |
-| PLAN-DEPLOY | ZEABUR Deployment & Repo Blueprint | `../../AegisBroker_ZEABUR_Deployment_Repo_Blueprintr_v0.9.0.md` | ✅ 已確認 |
-| PLAN-FIN | Financial Control Reconciliation Spec | `../../AegisBroker_Financial_Control_Reconciliation_Spec_v0.9.0.md` | ✅ 已確認 |
-| PLAN-LEDGER | Double Entry Ledger Accounting Spec | `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec_v0.9.0.md` | ✅ 已確認 |
+| PLAN-CEA | Core Event & Audit Architecture Spec & WorkItem List | `../../Core_Event_Audit_Architecture_Spec_WorkItem_List_AegisBroker.md` | ✅ 已確認 |
+| PLAN-DB | PostgreSQL Schema & Migration Spec | `../../AegisBroker_PostgreSQL_Schema_Migration_Spec.md` | ✅ 已確認 |
+| PLAN-API | Rust API Contract Spec | `../../AegisBroker_Rust_API_Contract_Spec.md` | ✅ 已確認 |
+| PLAN-DEPLOY | ZEABUR Deployment & Repo Blueprint | `../../AegisBroker_ZEABUR_Deployment_Repo_Blueprintr.md` | ✅ 已確認 |
+| PLAN-FIN | Financial Control Reconciliation Spec | `../../AegisBroker_Financial_Control_Reconciliation_Spec.md` | ✅ 已確認 |
+| PLAN-LEDGER | Double Entry Ledger Accounting Spec | `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec.md` | ✅ 已確認 |
 | PLAN-RBAC | Role Permission API/DB/Ledger Mapping Spec | `aegis_broker_role_permission_api_db_ledger_mapping.md` | ✅ 已確認 |
 
 ## 目前發行版本
 
 - Repository Version: `0.0.9`
-- Spec Baseline Suffix: `_v0.9.0`
+- Spec Baseline Filename Rule: `no suffix (future: _v1.1)`
 
 ## 開發階段代號與名稱（對齊 AGENTS.md Build Order）
 
