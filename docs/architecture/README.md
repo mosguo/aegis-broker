@@ -8,7 +8,7 @@
 4. `../../AegisBroker_ZEABUR_Deployment_Repo_Blueprintr.md`
 5. `../../AegisBroker_Financial_Control_Reconciliation_Spec.md`
 6. `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec.md`
-7. `aegis_broker_role_permission_api_db_ledger_mapping.md`
+7. `../../AegisBroker_role_permission_api_db_ledger_mapping.md`
 
 > 註：AGENTS.md 的通用檔名為語意名稱；目前主檔名不含版本後綴，未來若需版控後綴統一使用 `_v1.1` 規則。
 
@@ -22,7 +22,7 @@
 | PLAN-DEPLOY | ZEABUR Deployment & Repo Blueprint | `../../AegisBroker_ZEABUR_Deployment_Repo_Blueprintr.md` | ✅ 已確認 |
 | PLAN-FIN | Financial Control Reconciliation Spec | `../../AegisBroker_Financial_Control_Reconciliation_Spec.md` | ✅ 已確認 |
 | PLAN-LEDGER | Double Entry Ledger Accounting Spec | `../../AegisBroker_Double_Entry_Ledger_Accounting_Spec.md` | ✅ 已確認 |
-| PLAN-RBAC | Role Permission API/DB/Ledger Mapping Spec | `aegis_broker_role_permission_api_db_ledger_mapping.md` | ✅ 已確認 |
+| PLAN-RBAC | Role Permission API/DB/Ledger Mapping Spec | `../../AegisBroker_role_permission_api_db_ledger_mapping.md` | ✅ 已確認 |
 
 ## 目前發行版本
 
@@ -57,5 +57,5 @@ v0.1.0 將聚焦可實際上線能力，包含：
    - 土耳其語 (`tr`)
 2. Zeabur 可運作的前端 / 後端 / PostgreSQL 部署組態（見 `infra/zeabur/`）
 3. Google OAuth 實際登入流程（含 callback、session 交換、審計與事件紀錄）
-4. User Profile 與角色 / 權限對應與資料庫映射（見 `aegis_broker_role_permission_api_db_ledger_mapping.md`）
+4. User Profile 與角色 / 權限對應與資料庫映射（見 `../../AegisBroker_role_permission_api_db_ledger_mapping.md`）
 5. 角色設定可由授權用戶調整（含事件、審計、理由碼、權限校驗）
