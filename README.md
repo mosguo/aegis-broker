@@ -2,9 +2,9 @@
 
 AegisBroker 是面向大宗商品經紀業務的事件驅動控制型系統。
 
-- Repository Version: `0.0.9`
+- Repository Version: `0.1.1`
 - Spec Baseline: `v0.9.0`
-- Next Milestone: `v0.1.0`
+- Milestone Status: `v0.1.1（Config Layering + Zeabur Deploy-Ready Env Baseline）`
 
 ## Repository Layout
 
@@ -20,20 +20,36 @@ aegis-broker/
 └─ storage/
 ```
 
-## Current Bootstrap Scope
+## v0.1.1 Scope
 
-目前完成的基礎建設（依 AGENTS.md build order）：
+目前新增：
 
-1. repository skeleton
-2. migration skeleton
-3. backend health/readiness endpoints
-4. config loading and env contract
+1. backend env 分層樣板（dev / staging / prod）
+2. v0.1.1 最低必要變數：
+   - `DATABASE_URL`
+   - `MAX_DB_CONNECTIONS=5`
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `GOOGLE_REDIRECT_URI`
+   - `GOOGLE_CONNECTOR_REDIRECT_URI`
+3. Zeabur backend service env 映射升級
+4. DB overview + initial setup 文件（`storage/README.md`）
+
+## Root Env Bootstrap for Zeabur
+
+新增三個根目錄 env 啟動檔（僅含安全佔位，不含 secrets 實值）：
+
+- `.env`：共用基線
+- `.env.local`：本機開發預設
+- `.env.prod`：Zeabur production 佔位
+
+> secrets 未來仍以 Zeabur Environment Variables 為主，以上檔案用於「最大集合鍵名準備」與部署前核對。
 
 ## Quick Start (Backend)
 
 ```bash
 cd backend-rust
-cp ../infra/env/backend.env.example .env
+cp ../.env.local .env
 cargo run
 ```
 
@@ -42,18 +58,6 @@ Health endpoints:
 - `GET /health/live`
 - `GET /health/ready`
 
-`/health/ready` 會檢查：
-
-- 必填環境變數是否存在
-- PostgreSQL 是否可連線（`SELECT 1`）
-
 ## Architecture Sources
 
-請先閱讀 `docs/architecture/README.md` 對應的 v0.9.0 規格文件後再進行核心流程開發。
-
-## v0.1.0 Goals
-
-1. 多國語言：繁中、簡中、英文、西班牙文、土耳其語
-2. Zeabur 前端/後端/資料庫部署組態檔完成
-3. Google OAuth 實際登入流程
-4. User Profile + Role/Permission 對應與可編輯角色設定
+請先閱讀 `docs/architecture/README.md` 對應規格文件再進行核心流程擴充。
