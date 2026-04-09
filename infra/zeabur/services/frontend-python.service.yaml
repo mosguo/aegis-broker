@@ -3,7 +3,7 @@ runtime: docker
 build:
   dockerfile: ./frontend-python/Dockerfile
 start:
-  cmd: python -m http.server 3000
+  cmd: python server.py
 healthcheck:
   path: /
   port: 3000
