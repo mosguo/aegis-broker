@@ -1,5 +1,6 @@
 import json
 import os
+import socket
 import urllib.error
 import urllib.request
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -137,9 +138,17 @@ class AegisFrontendHandler(SimpleHTTPRequestHandler):
         )
 
 
+class AegisThreadingHTTPServer(ThreadingHTTPServer):
+    allow_reuse_address = True
+
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        super().server_bind()
+
+
 def main():
     port = int(os.getenv("PORT", "3000"))
-    server = ThreadingHTTPServer(("0.0.0.0", port), AegisFrontendHandler)
+    server = AegisThreadingHTTPServer(("0.0.0.0", port), AegisFrontendHandler)
     print(f"frontend-python serving at http://0.0.0.0:{port}")
     server.serve_forever()
 
