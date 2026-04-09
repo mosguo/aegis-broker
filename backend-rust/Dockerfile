@@ -1,4 +1,4 @@
-FROM rust:1.78-bookworm AS builder
+FROM rust:1.86-bookworm AS builder
 WORKDIR /app
 COPY backend-rust/Cargo.toml /app/Cargo.toml
 COPY backend-rust/src /app/src
