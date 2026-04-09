@@ -1,0 +1,12 @@
+service: postgres
+runtime: managed-postgresql
+version: "16"
+storage:
+  size_gb: 20
+env:
+  POSTGRES_DB: aegis_broker
+  POSTGRES_USER: aegis
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+backup:
+  enabled: true
+  schedule: "0 3 * * *"

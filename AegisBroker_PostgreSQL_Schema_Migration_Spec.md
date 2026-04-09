@@ -1,5 +1,5 @@
 # AegisBroker — PostgreSQL Schema & Migration Spec
-Version: v1.1  
+Version: v0.9.0  
 Status: Blueprint-ready / Repo-ready schema baseline  
 Target deployment: ZEABUR  
 System stack baseline: Python Frontend + Rust Backend + PostgreSQL + Object Storage  

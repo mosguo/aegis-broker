@@ -1,5 +1,5 @@
 # AegisBroker — ZEABUR Deployment & Repo Blueprint
-Version: v1.0  
+Version: v0.9.0  
 Status: 100%-path final blueprint  
 Target platform: ZEABUR  
 Primary stack: Python Frontend + Rust Backend + PostgreSQL + Object Storage  

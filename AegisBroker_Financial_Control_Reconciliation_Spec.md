@@ -1,5 +1,5 @@
 # AegisBroker — Financial Control & Reconciliation Spec
-Version: v1.1  
+Version: v0.9.0  
 Status: Next-layer Financial Control Blueprint  
 Target deployment: ZEABUR  
 Related documents:
