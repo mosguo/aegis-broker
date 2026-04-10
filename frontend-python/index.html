@@ -547,9 +547,9 @@
     <aside class="sidebar">
       <div class="brand"><div class="brand-logo"></div><span>AegisBroker</span></div>
       <nav class="nav-list">
-        <button class="nav-item active" type="button" data-scroll="#overviewPanel" id="menuOverview">Project</button>
-        <button class="nav-item" type="button" data-scroll="#connectionPanel" id="menuAuth">Server</button>
-        <button class="nav-item" type="button" data-scroll="#profilePanel" id="menuProfile">User</button>
+        <button class="nav-item active" type="button" data-scroll="#overviewPanel" id="menuOverview">Overview</button>
+        <button class="nav-item" type="button" data-scroll="#futurePanel" id="menuAuth">Content Services</button>
+        <button class="nav-item" type="button" data-scroll="#formsServicePanel" id="menuProfile">Forms Service</button>
         <button class="nav-item" type="button" data-scroll="#outputPanel" id="menuOutput">Output</button>
       </nav>
       <div class="status-box hidden">
@@ -627,7 +627,26 @@
                 <div class="status-meta" id="sessionLightMeta">Will query /v1/me/profile when a token exists</div>
               </article>
             </div>
-            <div class="future-space-note" id="futurePanelNote"></div>
+            <h2 class="section-title" id="contentServiceTitle">內容服務架構</h2>
+            <div class="future-space-note" id="futurePanelNote">以經紀商網站的服務、商品、團隊與聯絡資訊為前台內容骨架，並接上本專案的公開文件與傳統業務表單服務。</div>
+            <div class="compare-grid" style="margin-top: 16px;">
+              <article class="compare-card">
+                <h3 id="contentBrokerTitle">Brokerage Content</h3>
+                <ul>
+                  <li id="contentBrokerPoint1">經紀服務、流程顧問、市場資訊與商品目錄採公開唯讀展示。</li>
+                  <li id="contentBrokerPoint2">內容主軸對應 About、Services、Commodities、Contact 四類頁面。</li>
+                  <li id="contentBrokerPoint3">訪客以預設 workspace 讀取公開內容，不要求先登入。</li>
+                </ul>
+              </article>
+              <article class="compare-card">
+                <h3 id="contentDocsTitle">Document Services</h3>
+                <ul>
+                  <li id="contentDocsPoint1">商品交易文件庫依市場別管理：咖啡豆、原油、金屬、共用制度文件。</li>
+                  <li id="contentDocsPoint2">公開文件提供瀏覽、下載、版本說明；受控文件保留事件與稽核軌跡。</li>
+                  <li id="contentDocsPoint3">後續可擴充表單申請、文件發佈、下載授權與流程追蹤。</li>
+                </ul>
+              </article>
+            </div>
             <div class="compare-grid hidden">
               <article class="compare-card">
                 <h3 id="compareReferenceTitle">Zeabur reference</h3>
@@ -649,6 +668,30 @@
           </div>
         </section>
       </div>
+      <section class="panel" id="formsServicePanel">
+        <div class="inner">
+          <h2 class="section-title" id="formsServiceTitle">傳統業務表單服務</h2>
+          <div class="note" id="formsServiceNote">整合目前 `Docs/` 資料夾的商品交易文件與傳統表單，作為內容服務的文件中心與後續數位化流程入口。</div>
+          <div class="compare-grid" style="margin-top: 16px;">
+            <article class="compare-card">
+              <h3 id="formsMarketTitle">Market Libraries</h3>
+              <ul>
+                <li id="formsMarketPoint1">咖啡豆市場：詢價單、報價單、採購單、樣品追蹤、庫存與物流文件。</li>
+                <li id="formsMarketPoint2">原油市場：沿用同一組核心、擴充、進階文件分類，便於跨品類複用。</li>
+                <li id="formsMarketPoint3">金屬市場：同樣具備核心表單、作業文件與稽核/管理模板。</li>
+              </ul>
+            </article>
+            <article class="compare-card">
+              <h3 id="formsSharedTitle">Shared Governance</h3>
+              <ul>
+                <li id="formsSharedPoint1">共用主檔與制度文件提供供應商、原因碼、商品規格、版本規則與狀態流轉規則。</li>
+                <li id="formsSharedPoint2">內容服務需先做文件索引、分類、版本與可見性管理，再逐步接入流程化送審。</li>
+                <li id="formsSharedPoint3">所有受控發佈與下載申請，後續都應寫入 event_store 與 audit_chain。</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
       <section class="panel" id="connectionPanel">
         <div class="inner">
           <h2 class="section-title" id="connectionTitle">Connection Settings</h2>
