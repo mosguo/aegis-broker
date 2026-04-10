@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AegisBroker Console v0.1.4</title>
+  <title>AegisBroker</title>
   <style>
     :root {
       --bg: #0b0d12;
@@ -278,6 +278,59 @@
       flex-wrap: wrap;
     }
 
+    .toolbar-actions {
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .top-status-lights {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px;
+      min-height: 58px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(18, 25, 37, 0.96);
+    }
+
+    .top-status-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      cursor: default;
+    }
+
+    .top-status-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      right: 0;
+      top: calc(100% + 10px);
+      transform: translateX(20%);
+      opacity: 0;
+      pointer-events: none;
+      padding: 6px 9px;
+      border-radius: 10px;
+      background: rgba(7, 12, 20, 0.96);
+      border: 1px solid rgba(112, 143, 177, 0.28);
+      color: #e7eef9;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.26);
+      transition: opacity 120ms ease, transform 120ms ease;
+      z-index: 4;
+    }
+
+    .top-status-item:hover::after,
+    .top-status-item:focus-visible::after {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
     .toolbar button,
     .button-row button {
       min-height: 48px;
@@ -492,7 +545,7 @@
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand"><div class="brand-logo"></div><span>zeabur</span></div>
+      <div class="brand"><div class="brand-logo"></div><span>AegisBroker</span></div>
       <nav class="nav-list">
         <button class="nav-item active" type="button" data-scroll="#overviewPanel" id="menuOverview">Project</button>
         <button class="nav-item" type="button" data-scroll="#connectionPanel" id="menuAuth">Server</button>
@@ -529,8 +582,13 @@
     </aside>
     <main class="main">
       <div class="toolbar">
-        <div class="search"><span>Search</span><strong id="searchLabel">AegisBroker Console / Zeabur aligned</strong></div>
+        <div class="search"><strong id="searchLabel">AegisBroker</strong></div>
         <div class="toolbar-actions">
+          <div class="top-status-lights" aria-label="system status">
+            <span class="top-status-item" id="toolbarBackendStatus" tabindex="0" data-tooltip="Backend: checking"><span class="light warn" id="toolbarBackendLight"></span></span>
+            <span class="top-status-item" id="toolbarDatabaseStatus" tabindex="0" data-tooltip="Database: checking"><span class="light warn" id="toolbarDatabaseLight"></span></span>
+            <span class="top-status-item" id="toolbarSessionStatus" tabindex="0" data-tooltip="Login: waiting"><span class="light warn" id="toolbarSessionLight"></span></span>
+          </div>
           <button class="accent" type="button" id="oauthBtnTop">Start Login Flow</button>
         </div>
       </div>
@@ -685,8 +743,8 @@
       localeLabelSide: "\u8a9e\u8a00",
       themeLabelSide: "\u4e3b\u984c",
       billingLabel: "\u672c\u671f\u7528\u91cf\uff1aUI Sync v0.1.4",
-      searchLabel: "AegisBroker \u63a7\u5236\u53f0 / Zeabur \u5c0d\u9f4a\u7248",
-      title: "AegisBroker \u63a7\u5236\u53f0\uff08v0.1.4\uff09",
+      searchLabel: "AegisBroker",
+      title: "AegisBroker",
       subtitle: "\u4f9d\u7167 Zeabur \u5074\u6b04\u8cc7\u8a0a\u968e\u5c64\u91cd\u6574\u63a7\u5236\u53f0\uff0c\u4e26\u4fee\u6b63\u4e82\u78bc\u3001\u7528\u6236\u64cd\u4f5c\u8207\u81ea\u52d5\u72c0\u614b\u67e5\u8a62\u3002",
       overviewCardLabel: "\u7e3d\u89bd",
       quickConnectionLink: "\u9023\u7dda\u8a2d\u5b9a",
@@ -759,8 +817,8 @@
       localeLabelSide: "Language",
       themeLabelSide: "Theme",
       billingLabel: "Current usage: UI Sync v0.1.4",
-      searchLabel: "AegisBroker Console / Zeabur aligned",
-      title: "AegisBroker Console (v0.1.4)",
+      searchLabel: "AegisBroker",
+      title: "AegisBroker",
       subtitle: "Zeabur-aligned sidebar, repaired user actions, unified typography, and automatic status polling.",
       overviewCardLabel: "Overview",
       quickConnectionLink: "Connection Settings",
@@ -839,6 +897,12 @@
     const backendLight = $("backendLight");
     const databaseLight = $("databaseLight");
     const sessionLight = $("sessionLight");
+    const toolbarBackendStatus = $("toolbarBackendStatus");
+    const toolbarDatabaseStatus = $("toolbarDatabaseStatus");
+    const toolbarSessionStatus = $("toolbarSessionStatus");
+    const toolbarBackendLight = $("toolbarBackendLight");
+    const toolbarDatabaseLight = $("toolbarDatabaseLight");
+    const toolbarSessionLight = $("toolbarSessionLight");
     const backendLightSummary = $("backendLightSummary");
     const backendLightMeta = $("backendLightMeta");
     const databaseLightSummary = $("databaseLightSummary");
@@ -894,11 +958,29 @@
       if (s) setPill(sessionStatusPill, `Session: ${s.text}`, s.mode);
     }
 
-    function setCard(light, summary, meta, mode, text, sub) {
+    function setLightMode(light, mode) {
+      if (!light) return;
       light.classList.remove("ok", "warn", "bad");
-      light.classList.add(mode);
-      summary.textContent = text;
-      meta.textContent = sub;
+      if (mode) light.classList.add(mode);
+    }
+
+    function setCard(light, summary, meta, mode, text, sub) {
+      setLightMode(light, mode);
+      if (summary) summary.textContent = text;
+      if (meta) meta.textContent = sub;
+    }
+
+    function setToolbarLights({ backend: b, database: d, session: s } = {}) {
+      if (b) setLightMode(toolbarBackendLight, b);
+      if (d) setLightMode(toolbarDatabaseLight, d);
+      if (s) setLightMode(toolbarSessionLight, s);
+    }
+
+    function setToolbarTooltip(el, text) {
+      if (!el) return;
+      el.setAttribute("data-tooltip", text);
+      el.setAttribute("aria-label", text);
+      el.title = text;
     }
 
     function normalizeBaseUrl(url) {
@@ -960,6 +1042,8 @@
           session: { text: "logged_out", mode: "warn" }
         });
         setCard(sessionLight, sessionLightSummary, sessionLightMeta, "warn", t().sessionLightSummary, t().sessionLightMeta);
+        setToolbarLights({ session: "warn" });
+        setToolbarTooltip(toolbarSessionStatus, "Login: logged out");
         return;
       }
 
@@ -968,6 +1052,8 @@
         auth: { text: "enabled", mode: "ok" },
         session: { text: "logged_in", mode: "ok" }
       });
+      setToolbarLights({ session: "ok" });
+      setToolbarTooltip(toolbarSessionStatus, "Login: active");
     }
 
     function tokenPreparedState() {
@@ -988,6 +1074,8 @@
         hasToken ? "Token ready" : t().sessionLightSummary,
         hasToken ? "The next poll will verify /v1/me/profile" : t().sessionLightMeta
       );
+      setToolbarLights({ session: "warn" });
+      setToolbarTooltip(toolbarSessionStatus, hasToken ? "Login: token ready" : "Login: waiting");
     }
 
     function authHeaders() {
@@ -1033,6 +1121,9 @@
       setStatuses({ backend: { text: "checking", mode: "warn" } });
       setCard(backendLight, backendLightSummary, backendLightMeta, "warn", "Checking", `Source: ${source}`);
       setCard(databaseLight, databaseLightSummary, databaseLightMeta, "warn", "Checking", `Source: ${source}`);
+      setToolbarLights({ backend: "warn", database: "warn" });
+      setToolbarTooltip(toolbarBackendStatus, "Backend: checking");
+      setToolbarTooltip(toolbarDatabaseStatus, "Database: checking");
 
       try {
         const [liveResp, readyResp] = await Promise.all([
@@ -1046,6 +1137,9 @@
         setStatuses({ backend: { text: healthy ? "healthy" : "degraded", mode: healthy ? "ok" : "warn" } });
         setCard(backendLight, backendLightSummary, backendLightMeta, liveResp.ok ? "ok" : "bad", liveResp.ok ? "Backend live" : "Backend failed", `GET /health/live -> ${liveResp.status}`);
         setCard(databaseLight, databaseLightSummary, databaseLightMeta, readyResp.ok ? "ok" : "bad", readyResp.ok ? "Database ready" : "Database not ready", `GET /health/ready -> ${readyResp.status}`);
+        setToolbarLights({ backend: liveResp.ok ? "ok" : "bad", database: readyResp.ok ? "ok" : "bad" });
+        setToolbarTooltip(toolbarBackendStatus, liveResp.ok ? "Backend: healthy" : "Backend: failed");
+        setToolbarTooltip(toolbarDatabaseStatus, readyResp.ok ? "Database: ready" : "Database: not ready");
 
         if (source !== "auto") {
           printOutput({ live: { status: liveResp.status, body: live }, ready: { status: readyResp.status, body: ready } });
@@ -1054,6 +1148,9 @@
         setStatuses({ backend: { text: "failed", mode: "bad" } });
         setCard(backendLight, backendLightSummary, backendLightMeta, "bad", "Connection failed", String(error));
         setCard(databaseLight, databaseLightSummary, databaseLightMeta, "bad", "Connection failed", "Readiness query failed");
+        setToolbarLights({ backend: "bad", database: "bad" });
+        setToolbarTooltip(toolbarBackendStatus, "Backend: failed");
+        setToolbarTooltip(toolbarDatabaseStatus, "Database: failed");
         if (source !== "auto") printOutput({ error: String(error) });
       }
     }
@@ -1065,6 +1162,8 @@
           session: { text: "idle", mode: "warn" }
         });
         setCard(sessionLight, sessionLightSummary, sessionLightMeta, "warn", t().sessionLightSummary, t().sessionLightMeta);
+        setToolbarLights({ session: "warn" });
+        setToolbarTooltip(toolbarSessionStatus, "Login: waiting");
         if (!isLoggedIn) {
           userNameEl.textContent = t().guestLabel;
           userRoleEl.textContent = t().guestRole;
@@ -1090,6 +1189,8 @@
             session: { text: "active", mode: "ok" }
           });
           setCard(sessionLight, sessionLightSummary, sessionLightMeta, "ok", "Session valid", `GET /v1/me/profile -> ${resp.status}`);
+          setToolbarLights({ session: "ok" });
+          setToolbarTooltip(toolbarSessionStatus, "Login: active");
           if (source !== "auto") printOutput({ status: resp.status, body });
           return;
         }
@@ -1100,6 +1201,8 @@
           session: { text: "invalid", mode: "bad" }
         });
         setCard(sessionLight, sessionLightSummary, sessionLightMeta, "bad", "Session invalid", `GET /v1/me/profile -> ${resp.status}`);
+        setToolbarLights({ session: "bad" });
+        setToolbarTooltip(toolbarSessionStatus, "Login: invalid");
         if (source !== "auto") printOutput({ status: resp.status, body });
       } catch (error) {
         setStatuses({
@@ -1107,6 +1210,8 @@
           session: { text: "error", mode: "bad" }
         });
         setCard(sessionLight, sessionLightSummary, sessionLightMeta, "bad", "Session query failed", String(error));
+        setToolbarLights({ session: "bad" });
+        setToolbarTooltip(toolbarSessionStatus, "Login: error");
         if (source !== "auto") printOutput({ error: String(error) });
       }
     }
@@ -1271,6 +1376,10 @@
     setCard(backendLight, backendLightSummary, backendLightMeta, "warn", t().backendLightSummary, t().backendLightMeta);
     setCard(databaseLight, databaseLightSummary, databaseLightMeta, "warn", t().databaseLightSummary, t().databaseLightMeta);
     setCard(sessionLight, sessionLightSummary, sessionLightMeta, "warn", t().sessionLightSummary, t().sessionLightMeta);
+    setToolbarLights({ backend: "warn", database: "warn", session: "warn" });
+    setToolbarTooltip(toolbarBackendStatus, "Backend: checking");
+    setToolbarTooltip(toolbarDatabaseStatus, "Database: checking");
+    setToolbarTooltip(toolbarSessionStatus, "Login: waiting");
     schedulePolling();
     refreshSystemStatus("auto");
   </script>
