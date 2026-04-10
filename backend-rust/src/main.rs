@@ -43,6 +43,25 @@ const REQUIRED_READY_TABLES: &[&str] = &[
     "audit_chain",
 ];
 
+fn db_read_failed(
+    operation: &'static str,
+    message: &'static str,
+    trace_id: &str,
+    database_url: &str,
+    err: &sqlx::Error,
+) -> AppError {
+    error!(
+        trace_id = %trace_id,
+        operation = operation,
+        status = "failed",
+        error_code = "DB_READ_FAILED",
+        error = %err,
+        database_url = %database_url,
+        "{message}"
+    );
+    AppError::internal("DB_READ_FAILED", message, trace_id.to_string())
+}
+
 #[derive(Debug, Serialize)]
 struct HealthResponse {
     status: &'static str,
@@ -244,7 +263,15 @@ async fn list_workspaces(
     )
     .fetch_all(&state.db_pool)
     .await
-    .map_err(|_| AppError::internal("DB_READ_FAILED", "failed to list workspaces", trace_id))?;
+    .map_err(|err| {
+        db_read_failed(
+            "list_workspaces",
+            "failed to list workspaces",
+            &trace_id,
+            &state.config.database_url,
+            &err,
+        )
+    })?;
 
     Ok(Json(
         rows.into_iter()
@@ -324,7 +351,13 @@ async fn auth_google_start(
 ) -> Result<Json<AuthStartResponse>, AppError> {
     let trace_id = Uuid::new_v4().to_string();
     let workspace_id = parse_workspace_id(&params, &trace_id)?;
-    ensure_workspace_exists(&state.db_pool, workspace_id, &trace_id).await?;
+    ensure_workspace_exists(
+        &state.db_pool,
+        workspace_id,
+        &trace_id,
+        &state.config.database_url,
+    )
+    .await?;
     let client_id = state.config.google_client_id.clone().ok_or_else(|| {
         AppError::service_unavailable(
             "OAUTH_NOT_CONFIGURED",
@@ -395,11 +428,13 @@ async fn auth_google_callback(
     .bind(&query.state)
     .fetch_optional(&state.db_pool)
     .await
-    .map_err(|_| {
-        AppError::internal(
-            "DB_READ_FAILED",
+    .map_err(|err| {
+        db_read_failed(
+            "auth_google_callback",
             "failed to read oauth state",
-            trace_id.clone(),
+            &trace_id,
+            &state.config.database_url,
+            &err,
         )
     })?
     .ok_or_else(|| {
@@ -536,11 +571,13 @@ async fn auth_google_callback(
     .bind(&userinfo.sub)
     .fetch_optional(&mut *tx)
     .await
-    .map_err(|_| {
-        AppError::internal(
-            "DB_READ_FAILED",
+    .map_err(|err| {
+        db_read_failed(
+            "auth_google_callback",
             "failed to read oauth identity",
-            trace_id.clone(),
+            &trace_id,
+            &state.config.database_url,
+            &err,
         )
     })?;
 
@@ -654,8 +691,14 @@ async fn auth_google_callback(
         )
     })?;
 
-    let profile =
-        fetch_user_profile(&state.db_pool, resolved_user_id, oauth_row.1, &trace_id).await?;
+    let profile = fetch_user_profile(
+        &state.db_pool,
+        resolved_user_id,
+        oauth_row.1,
+        &trace_id,
+        &state.config.database_url,
+    )
+    .await?;
 
     Ok(Json(AuthCallbackResponse {
         session_token,
@@ -671,8 +714,16 @@ async fn get_me_profile(
 ) -> Result<Json<UserProfileDto>, AppError> {
     let trace_id = Uuid::new_v4().to_string();
     let (user_id, workspace_id) =
-        resolve_session_identity(&state.db_pool, &headers, &trace_id).await?;
-    let profile = fetch_user_profile(&state.db_pool, user_id, workspace_id, &trace_id).await?;
+        resolve_session_identity(&state.db_pool, &headers, &trace_id, &state.config.database_url)
+            .await?;
+    let profile = fetch_user_profile(
+        &state.db_pool,
+        user_id,
+        workspace_id,
+        &trace_id,
+        &state.config.database_url,
+    )
+    .await?;
     Ok(Json(profile))
 }
 
@@ -700,7 +751,8 @@ async fn update_user_roles(
     }
 
     let (actor_user_id, actor_workspace_id) =
-        resolve_session_identity(&state.db_pool, &headers, &trace_id).await?;
+        resolve_session_identity(&state.db_pool, &headers, &trace_id, &state.config.database_url)
+            .await?;
 
     if actor_workspace_id != workspace_id {
         return Err(AppError::forbidden(
@@ -720,7 +772,15 @@ async fn update_user_roles(
     .bind(actor_user_id)
     .fetch_one(&state.db_pool)
     .await
-    .map_err(|_| AppError::internal("DB_READ_FAILED", "failed to validate actor role", trace_id.clone()))?;
+    .map_err(|err| {
+        db_read_failed(
+            "update_user_roles",
+            "failed to validate actor role",
+            &trace_id,
+            &state.config.database_url,
+            &err,
+        )
+    })?;
 
     if !is_admin {
         return Err(AppError::forbidden(
@@ -829,7 +889,8 @@ async fn update_me_profile(
 ) -> Result<Json<ProfileUpdateResponse>, AppError> {
     let trace_id = Uuid::new_v4().to_string();
     let (user_id, workspace_id) =
-        resolve_session_identity(&state.db_pool, &headers, &trace_id).await?;
+        resolve_session_identity(&state.db_pool, &headers, &trace_id, &state.config.database_url)
+            .await?;
 
     let locale = normalize_supported_locale(&req.locale, &trace_id)?;
     let reason_code = req.reason_code.trim();
@@ -936,7 +997,14 @@ async fn update_me_profile(
         )
     })?;
 
-    let profile = fetch_user_profile(&state.db_pool, user_id, workspace_id, &trace_id).await?;
+    let profile = fetch_user_profile(
+        &state.db_pool,
+        user_id,
+        workspace_id,
+        &trace_id,
+        &state.config.database_url,
+    )
+    .await?;
     Ok(Json(ProfileUpdateResponse { profile, trace_id }))
 }
 
@@ -965,6 +1033,7 @@ async fn ensure_workspace_exists(
     pool: &sqlx::PgPool,
     workspace_id: Uuid,
     trace_id: &str,
+    database_url: &str,
 ) -> Result<(), AppError> {
     let exists = sqlx::query_scalar::<_, bool>(
         "SELECT EXISTS (
@@ -976,13 +1045,13 @@ async fn ensure_workspace_exists(
     .bind(workspace_id)
     .fetch_one(pool)
     .await
-    .map_err(|_| {
-        AppError::internal(
-            "DB_READ_FAILED",
-            "failed to validate workspace",
-            trace_id.to_string(),
-        )
-    })?;
+    .map_err(|err| db_read_failed(
+        "ensure_workspace_exists",
+        "failed to validate workspace",
+        trace_id,
+        database_url,
+        &err,
+    ))?;
 
     if !exists {
         return Err(AppError::bad_request(
@@ -1052,6 +1121,7 @@ async fn resolve_session_identity(
     pool: &sqlx::PgPool,
     headers: &HeaderMap,
     trace_id: &str,
+    database_url: &str,
 ) -> Result<(Uuid, Uuid), AppError> {
     let auth = headers
         .get("authorization")
@@ -1079,13 +1149,13 @@ async fn resolve_session_identity(
     .bind(token)
     .fetch_optional(pool)
     .await
-    .map_err(|_| {
-        AppError::internal(
-            "DB_READ_FAILED",
-            "failed to read session",
-            trace_id.to_string(),
-        )
-    })?
+    .map_err(|err| db_read_failed(
+        "resolve_session_identity",
+        "failed to read session",
+        trace_id,
+        database_url,
+        &err,
+    ))?
     .ok_or_else(|| {
         AppError::unauthorized(
             "SESSION_INVALID",
@@ -1100,6 +1170,7 @@ async fn fetch_user_profile(
     user_id: Uuid,
     workspace_id: Uuid,
     trace_id: &str,
+    database_url: &str,
 ) -> Result<UserProfileDto, AppError> {
     let (email, display_name, avatar_url, locale) =
         sqlx::query_as::<_, (String, Option<String>, Option<String>, Option<String>)>(
@@ -1112,13 +1183,13 @@ async fn fetch_user_profile(
         .bind(workspace_id)
         .fetch_optional(pool)
         .await
-        .map_err(|_| {
-            AppError::internal(
-                "DB_READ_FAILED",
-                "failed to read user profile",
-                trace_id.to_string(),
-            )
-        })?
+        .map_err(|err| db_read_failed(
+            "fetch_user_profile",
+            "failed to read user profile",
+            trace_id,
+            database_url,
+            &err,
+        ))?
         .ok_or_else(|| {
             AppError::bad_request("USER_NOT_FOUND", "user not found", trace_id.to_string())
         })?;
@@ -1130,7 +1201,15 @@ async fn fetch_user_profile(
     .bind(user_id)
     .fetch_all(pool)
     .await
-    .map_err(|_| AppError::internal("DB_READ_FAILED", "failed to read user roles", trace_id.to_string()))?;
+    .map_err(|err| {
+        db_read_failed(
+            "fetch_user_profile",
+            "failed to read user roles",
+            trace_id,
+            database_url,
+            &err,
+        )
+    })?;
 
     Ok(UserProfileDto {
         user_id,
