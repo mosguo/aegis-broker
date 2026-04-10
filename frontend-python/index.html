@@ -589,7 +589,6 @@
             <span class="top-status-item" id="toolbarDatabaseStatus" tabindex="0" data-tooltip="Database: checking"><span class="light warn" id="toolbarDatabaseLight"></span></span>
             <span class="top-status-item" id="toolbarSessionStatus" tabindex="0" data-tooltip="Login: waiting"><span class="light warn" id="toolbarSessionLight"></span></span>
           </div>
-          <button class="accent" type="button" id="oauthBtnTop">Start Login Flow</button>
         </div>
       </div>
       <div class="overview-grid" id="overviewPanel">
@@ -628,8 +627,7 @@
                 <div class="status-meta" id="sessionLightMeta">Will query /v1/me/profile when a token exists</div>
               </article>
             </div>
-            <h2 class="section-title" id="futurePanelTitle">Future Content Area</h2>
-            <div class="future-space-note" id="futurePanelNote">Reserved empty space for future dashboard modules, public document views, and additional operational panels.</div>
+            <div class="future-space-note" id="futurePanelNote"></div>
             <div class="compare-grid hidden">
               <article class="compare-card">
                 <h3 id="compareReferenceTitle">Zeabur reference</h3>
@@ -751,7 +749,6 @@
       quickProfileLink: "\u500b\u4eba\u8cc7\u6599",
       quickOutputLink: "\u4e8b\u4ef6\u8f38\u51fa",
       manualRefreshBtn: "\u7acb\u5373\u540c\u6b65\u72c0\u614b",
-      oauthBtnTop: "\u5efa\u7acb\u767b\u5165\u6d41\u7a0b",
       statusCardBackendTitle: "Backend API",
       statusCardDatabaseTitle: "\u8cc7\u6599\u5eab Ready",
       statusCardSessionTitle: "\u4f7f\u7528\u8005 Session",
@@ -825,7 +822,6 @@
       quickProfileLink: "Profile",
       quickOutputLink: "Output",
       manualRefreshBtn: "Refresh Status",
-      oauthBtnTop: "Start Login Flow",
       comparisonTitle: "Comparison Notes",
       compareReferenceTitle: "Zeabur reference",
       compareReferencePoint1: "Bottom-left user operations live inside an account card and overflow menu.",
@@ -1203,6 +1199,7 @@
         setCard(sessionLight, sessionLightSummary, sessionLightMeta, "bad", "Session invalid", `GET /v1/me/profile -> ${resp.status}`);
         setToolbarLights({ session: "bad" });
         setToolbarTooltip(toolbarSessionStatus, "Login: invalid");
+        sessionTokenEl.value = "";
         if (source !== "auto") printOutput({ status: resp.status, body });
       } catch (error) {
         setStatuses({
@@ -1233,7 +1230,7 @@
         const resp = await fetch(`${backend}/auth/google/start?workspace_id=${encodeURIComponent(workspace)}`);
         const body = await printResponse(resp);
         if (resp.ok && body.auth_url) {
-          window.open(body.auth_url, "_blank", "noopener,noreferrer");
+          window.location.assign(body.auth_url);
           setStatuses({ auth: { text: "redirected", mode: "ok" } });
         } else {
           setStatuses({ auth: { text: "failed", mode: "warn" } });
@@ -1271,6 +1268,9 @@
           updateAvatar(body.display_name || body.email || "user", body.avatar_url || "");
           syncLoginState(true, { keepToken: true });
           setStatuses({ session: { text: "profile_loaded", mode: "ok" } });
+        } else if (resp.status === 401 || (body && body.error_code === "SESSION_INVALID")) {
+          syncLoginState(false);
+          setStatuses({ auth: { text: "failed", mode: "warn" }, session: { text: "invalid", mode: "bad" } });
         }
       } catch (error) {
         setStatuses({ session: { text: "error", mode: "bad" } });
@@ -1300,6 +1300,9 @@
           userRoleEl.textContent = (body.profile.roles && body.profile.roles[0]) || t().memberRole;
           updateAvatar(body.profile.display_name || body.profile.email || "user", body.profile.avatar_url || "");
           setStatuses({ session: { text: "profile_saved", mode: "ok" } });
+        } else if (resp.status === 401 || (body && body.error_code === "SESSION_INVALID")) {
+          syncLoginState(false);
+          setStatuses({ auth: { text: "failed", mode: "warn" }, session: { text: "invalid", mode: "bad" } });
         } else if (!resp.ok) {
           setStatuses({ session: { text: "save_failed", mode: "bad" } });
         }

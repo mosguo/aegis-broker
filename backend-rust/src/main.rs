@@ -410,13 +410,26 @@ async fn auth_google_start(
         AppError::internal("DB_WRITE_FAILED", "failed to store oauth state", trace_id.clone())
     })?;
 
-    let auth_url = format!(
-        "https://accounts.google.com/o/oauth2/v2/auth?client_id={}&redirect_uri={}&response_type=code&scope={}&state={}&nonce={}",
-        urlencoding::encode(&client_id),
-        urlencoding::encode(&redirect_uri),
-        urlencoding::encode(&state.config.google_oauth_scope),
-        urlencoding::encode(&state_token),
-        urlencoding::encode(&nonce)
+    let mut auth_url = reqwest::Url::parse("https://accounts.google.com/o/oauth2/v2/auth")
+        .map_err(|_| AppError::internal("GOOGLE_AUTH_URL_INVALID", "failed to build google auth url", trace_id.clone()))?;
+    auth_url
+        .query_pairs_mut()
+        .append_pair("client_id", &client_id)
+        .append_pair("redirect_uri", &redirect_uri)
+        .append_pair("response_type", "code")
+        .append_pair("scope", &state.config.google_oauth_scope)
+        .append_pair("state", &state_token)
+        .append_pair("nonce", &nonce)
+        .append_pair("include_granted_scopes", "true");
+    let auth_url = auth_url.into_string();
+
+    info!(
+        trace_id = %trace_id,
+        operation = "auth_google_start",
+        workspace_id = %workspace_id,
+        redirect_uri = %redirect_uri,
+        status = "generated",
+        "generated google auth url"
     );
 
     Ok(Json(AuthStartResponse {
