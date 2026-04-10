@@ -42,6 +42,7 @@ const REQUIRED_READY_TABLES: &[&str] = &[
     "event_store",
     "audit_chain",
 ];
+const DEFAULT_WORKSPACE_ID: &str = "00000000-0000-0000-0000-000000000001";
 
 fn db_read_failed(
     operation: &'static str,
@@ -88,6 +89,7 @@ struct AuthStartResponse {
     auth_url: String,
     state: String,
     trace_id: String,
+    workspace_id: Uuid,
 }
 
 #[derive(Debug, Deserialize)]
@@ -114,6 +116,7 @@ struct AuthCallbackResponse {
     session_token: String,
     expires_at: String,
     trace_id: String,
+    workspace_id: Uuid,
     user: UserProfileDto,
 }
 
@@ -373,6 +376,14 @@ async fn auth_google_start(
         )
     })?;
 
+    info!(
+        trace_id = %trace_id,
+        operation = "auth_google_start",
+        workspace_id = %workspace_id,
+        status = "resolved",
+        "resolved workspace for oauth start"
+    );
+
     let state_token = Uuid::new_v4().to_string();
     let nonce: String = rand::thread_rng()
         .sample_iter(&Alphanumeric)
@@ -395,7 +406,7 @@ async fn auth_google_start(
     .execute(&state.db_pool)
     .await
     .map_err(|err| {
-        error!(trace_id=%trace_id, operation="auth_google_start", status="failed", error_code="DB_WRITE_FAILED", error=%err, "failed to store oauth state");
+        error!(trace_id=%trace_id, operation="auth_google_start", workspace_id=%workspace_id, status="failed", error_code="DB_WRITE_FAILED", error=%err, "failed to store oauth state");
         AppError::internal("DB_WRITE_FAILED", "failed to store oauth state", trace_id.clone())
     })?;
 
@@ -412,6 +423,7 @@ async fn auth_google_start(
         auth_url,
         state: state_token,
         trace_id,
+        workspace_id,
     }))
 }
 
@@ -444,6 +456,14 @@ async fn auth_google_callback(
             trace_id.clone(),
         )
     })?;
+
+    info!(
+        trace_id = %trace_id,
+        operation = "auth_google_callback",
+        workspace_id = %oauth_row.1,
+        status = "resolved",
+        "resolved workspace for oauth callback"
+    );
 
     if oauth_row.2 {
         return Err(AppError::bad_request(
@@ -704,6 +724,7 @@ async fn auth_google_callback(
         session_token,
         expires_at: session_expires_at.to_rfc3339(),
         trace_id,
+        workspace_id: oauth_row.1,
         user: profile,
     }))
 }
@@ -1009,24 +1030,19 @@ async fn update_me_profile(
 }
 
 fn parse_workspace_id(params: &HashMap<String, String>, trace_id: &str) -> Result<Uuid, AppError> {
-    params
-        .get("workspace_id")
-        .ok_or_else(|| {
+    let fallback =
+        Uuid::parse_str(DEFAULT_WORKSPACE_ID).expect("default workspace id must be valid");
+
+    match params.get("workspace_id").map(|value| value.trim()) {
+        None | Some("") => Ok(fallback),
+        Some(value) => Uuid::parse_str(value).map_err(|_| {
             AppError::bad_request(
-                "WORKSPACE_ID_REQUIRED",
-                "query param workspace_id is required",
+                "WORKSPACE_ID_INVALID",
+                "query param workspace_id is invalid uuid",
                 trace_id.to_string(),
             )
-        })
-        .and_then(|value| {
-            Uuid::parse_str(value).map_err(|_| {
-                AppError::bad_request(
-                    "WORKSPACE_ID_INVALID",
-                    "query param workspace_id is invalid uuid",
-                    trace_id.to_string(),
-                )
-            })
-        })
+        }),
+    }
 }
 
 async fn ensure_workspace_exists(
@@ -1045,13 +1061,23 @@ async fn ensure_workspace_exists(
     .bind(workspace_id)
     .fetch_one(pool)
     .await
-    .map_err(|err| db_read_failed(
-        "ensure_workspace_exists",
-        "failed to validate workspace",
-        trace_id,
-        database_url,
-        &err,
-    ))?;
+    .map_err(|err| {
+        error!(
+            trace_id = %trace_id,
+            operation = "ensure_workspace_exists",
+            workspace_id = %workspace_id,
+            status = "failed",
+            error_code = "DB_READ_FAILED",
+            error = %err,
+            database_url = %database_url,
+            "failed to validate workspace"
+        );
+        AppError::internal(
+            "DB_READ_FAILED",
+            "failed to validate workspace",
+            trace_id.to_string(),
+        )
+    })?;
 
     if !exists {
         return Err(AppError::bad_request(

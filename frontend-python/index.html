@@ -804,6 +804,7 @@
     const runtimeConfig = window.__AEGIS_CONFIG__ || {};
     const LOCAL_STORAGE_BACKEND_KEY = "aegis.backendBaseUrl";
     const HEALTH_POLL_INTERVAL_MS = 30000;
+    const DEFAULT_WORKSPACE_ID = "00000000-0000-0000-0000-000000000001";
     const $ = (id) => document.getElementById(id);
 
     const outputEl = $("output");
@@ -841,6 +842,10 @@
     function setText(id, value) {
       const el = $(id);
       if (el) el.textContent = value;
+    }
+
+    function resolvedWorkspaceId() {
+      return workspaceEl.value.trim() || DEFAULT_WORKSPACE_ID;
     }
 
     function render(locale) {
@@ -1096,8 +1101,8 @@
 
     async function runOAuthStart() {
       try {
-        const workspace = workspaceEl.value.trim();
-        if (!workspace) throw new Error(t().workspaceRequired);
+        const workspace = resolvedWorkspaceId();
+        workspaceEl.value = workspace;
         setStatuses({ auth: { text: "requesting", mode: "warn" } });
         const resp = await fetch(`${backend}/auth/google/start?workspace_id=${encodeURIComponent(workspace)}`);
         const body = await printResponse(resp);
@@ -1211,7 +1216,7 @@
     $("loadProfileBtn").addEventListener("click", loadProfile);
     $("saveProfileBtn").addEventListener("click", saveProfile);
     $("menuLoadProfileAction").addEventListener("click", async () => { closeUserMenu(); await loadProfile(); });
-    $("menuCopyWorkspaceAction").addEventListener("click", async () => { closeUserMenu(); await copyText(workspaceEl.value.trim(), t().workspaceCopied); });
+    $("menuCopyWorkspaceAction").addEventListener("click", async () => { closeUserMenu(); await copyText(resolvedWorkspaceId(), t().workspaceCopied); });
     $("menuCopySessionAction").addEventListener("click", async () => { closeUserMenu(); await copyText(sessionTokenEl.value.trim(), t().tokenCopied); });
     $("menuToggleAuthAction").addEventListener("click", () => { closeUserMenu(); toggleAuthState(); });
 
@@ -1234,6 +1239,7 @@
     if ([...localeEl.options].some((option) => option.value === defaultLocale)) localeEl.value = defaultLocale;
     backend = resolveBackendBaseUrl();
     backendUrlEl.value = backend;
+    workspaceEl.value = resolvedWorkspaceId();
     render(localeEl.value);
     syncLoginState(false, { keepToken: true });
     setStatuses({

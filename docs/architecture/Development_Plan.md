@@ -88,4 +88,11 @@
 - `/auth/google/start`
 - `/v1/me/profile`
 
+## 2026-04-10 Workspace Fallback Principle
+
+- Guest users may read public, read-only documents under the seeded default workspace scope
+- when `workspace_id` is omitted, the system falls back to the default workspace `00000000-0000-0000-0000-000000000001`
+- login success and login failure paths must both write `workspace_id` into runtime logs so operators can distinguish confirmed success from confirmed failure
+- frontend guest flows should prefill the default workspace instead of requiring users to manually input a UUID before login
+
 來顯示控制面板狀態與用戶資料。
