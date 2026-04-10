@@ -96,3 +96,12 @@
 - frontend guest flows should prefill the default workspace instead of requiring users to manually input a UUID before login
 
 來顯示控制面板狀態與用戶資料。
+
+## 2026-04-11 Content Service Architecture
+
+- Add a brokerage-style public content layer modeled on About, Services, Commodities, and Contact information architecture
+- Integrate the existing `Docs/` traditional form libraries as a first-class document service domain
+- Treat guest public-document browsing as default-workspace readonly access
+- Keep controlled publication, restricted download, and form-request flows inside event and audit boundaries
+- Align frontend navigation to Overview, Content Services, Forms Service, Connection/Session, and Event Output
+- Preserve the design in `Content_Service_Architecture.md` before deeper schema and API rollout

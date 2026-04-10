@@ -11,6 +11,7 @@
 7. `../../AegisBroker_role_permission_api_db_ledger_mapping.md`
 8. `./Development_Plan.md`
 9. `../../AegisBroker_Config_Management_Spec.md`
+10. `./Content_Service_Architecture.md`
 
 ## 文件狀態
 
@@ -25,6 +26,7 @@
 | PLAN-RBAC | Role Permission API/DB/Ledger Mapping Spec | `../../AegisBroker_role_permission_api_db_ledger_mapping.md` |
 | PLAN-DEV | Development Plan | `./Development_Plan.md` |
 | PLAN-CFG | Config Management Spec | `../../AegisBroker_Config_Management_Spec.md` |
+| PLAN-CONTENT | Content Service Architecture | `./Content_Service_Architecture.md` |
 
 ## 2026-04-09 補充
 
