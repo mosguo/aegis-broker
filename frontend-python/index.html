@@ -425,6 +425,24 @@
       color: #d3dff1;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
+    .future-space {
+      grid-column: 1 / -1;
+      min-height: 520px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .future-space-note {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 520px;
+    }
+
     label {
       display: block;
       margin-bottom: 7px;
@@ -481,7 +499,7 @@
         <button class="nav-item" type="button" data-scroll="#profilePanel" id="menuProfile">User</button>
         <button class="nav-item" type="button" data-scroll="#outputPanel" id="menuOutput">Output</button>
       </nav>
-      <div class="status-box">
+      <div class="status-box hidden">
         <div class="status-title" id="syncStatusLabel">System Status Sync</div>
         <div class="pills">
           <span class="pill" id="backendStatusPill">Backend: idle</span>
@@ -490,8 +508,8 @@
         </div>
       </div>
       <div class="sidebar-meta">
-        <div class="meta-row"><span id="localeLabelSide">Language</span><span id="localeSummary">zh-TW</span></div>
-        <div class="meta-row"><span id="themeLabelSide">Theme</span><span>Dark</span></div>
+        <div class="meta-row hidden"><span id="localeLabelSide">Language</span><span id="localeSummary">zh-TW</span></div>
+        <div class="meta-row hidden"><span id="themeLabelSide">Theme</span><span>Dark</span></div>
         <div class="billing" id="billingLabel">UI Sync v0.1.4</div>
         <div class="user-panel">
           <div class="avatar" id="userAvatar">AG</div>
@@ -513,12 +531,11 @@
       <div class="toolbar">
         <div class="search"><span>Search</span><strong id="searchLabel">AegisBroker Console / Zeabur aligned</strong></div>
         <div class="toolbar-actions">
-          <button type="button" id="manualRefreshBtn">Refresh Status</button>
           <button class="accent" type="button" id="oauthBtnTop">Start Login Flow</button>
         </div>
       </div>
       <div class="overview-grid" id="overviewPanel">
-        <div class="stack">
+        <div class="stack hidden">
           <section class="panel hero">
             <div class="inner">
               <h1 id="title">AegisBroker Console (v0.1.4)</h1>
@@ -534,9 +551,9 @@
             </div>
           </section>
         </div>
-        <section class="panel">
+        <section class="panel future-space" id="futurePanel">
           <div class="inner">
-            <div class="status-grid">
+            <div class="status-grid hidden">
               <article class="status-card">
                 <div class="status-card-top"><h3 id="statusCardBackendTitle">Backend API</h3><span class="light bad" id="backendLight"></span></div>
                 <p id="backendLightSummary">Not checked yet</p>
@@ -553,8 +570,9 @@
                 <div class="status-meta" id="sessionLightMeta">Will query /v1/me/profile when a token exists</div>
               </article>
             </div>
-            <h2 class="section-title" id="comparisonTitle">Comparison Notes</h2>
-            <div class="compare-grid">
+            <h2 class="section-title" id="futurePanelTitle">Future Content Area</h2>
+            <div class="future-space-note" id="futurePanelNote">Reserved empty space for future dashboard modules, public document views, and additional operational panels.</div>
+            <div class="compare-grid hidden">
               <article class="compare-card">
                 <h3 id="compareReferenceTitle">Zeabur reference</h3>
                 <ul>
@@ -578,7 +596,7 @@
       <section class="panel" id="connectionPanel">
         <div class="inner">
           <h2 class="section-title" id="connectionTitle">Connection Settings</h2>
-          <div class="form-grid">
+          <div class="form-grid hidden">
             <div>
               <label for="locale" id="localeLabel">Language</label>
               <select id="locale">
@@ -599,24 +617,21 @@
             <input id="backendUrl" placeholder="https://your-backend-host.zeabur.app" />
           </div>
           <div class="button-row">
-            <button type="button" id="healthBtn">Check Backend Health</button>
             <button class="primary" type="button" id="oauthBtn">Start Google Login</button>
           </div>
-          <div class="note" id="connectionFootnote">Status cards auto-poll every 30 seconds and can also be refreshed manually.</div>
+          <div class="note hidden" id="connectionFootnote">Status cards auto-poll every 30 seconds and can also be refreshed manually.</div>
         </div>
       </section>
       <section class="panel" id="sessionPanel">
         <div class="inner">
           <h2 class="section-title" id="sessionTitle">Session</h2>
-          <label for="sessionToken" id="sessionTokenLabel">Session Token</label>
           <input id="sessionToken" placeholder="Bearer token" />
           <div class="button-row">
-            <button type="button" id="toggleAuthBtn">Toggle Login State</button>
             <button type="button" id="copySessionBtn">Copy Token</button>
           </div>
         </div>
       </section>
-      <section class="panel" id="profilePanel">
+      <section class="panel hidden" id="profilePanel">
         <div class="inner">
           <h2 class="section-title" id="profileTitle">User Attribute Actions</h2>
           <div class="form-grid">
@@ -844,6 +859,11 @@
       if (el) el.textContent = value;
     }
 
+    function on(id, eventName, handler) {
+      const el = $(id);
+      if (el) el.addEventListener(eventName, handler);
+    }
+
     function resolvedWorkspaceId() {
       return workspaceEl.value.trim() || DEFAULT_WORKSPACE_ID;
     }
@@ -857,7 +877,8 @@
 
     function refreshAuthLabels() {
       const label = isLoggedIn ? t().authToggleBtnLogout : t().authToggleBtnLogin;
-      $("toggleAuthBtn").textContent = label;
+      const toggleAuthBtnEl = $("toggleAuthBtn");
+      if (toggleAuthBtnEl) toggleAuthBtnEl.textContent = label;
       $("menuToggleAuthAction").textContent = label;
     }
 
@@ -1207,18 +1228,18 @@
       });
     });
 
-    $("healthBtn").addEventListener("click", () => refreshSystemStatus("manual"));
-    $("manualRefreshBtn").addEventListener("click", () => refreshSystemStatus("manual"));
-    $("oauthBtn").addEventListener("click", runOAuthStart);
-    $("oauthBtnTop").addEventListener("click", runOAuthStart);
-    $("toggleAuthBtn").addEventListener("click", toggleAuthState);
-    $("copySessionBtn").addEventListener("click", () => copyText(sessionTokenEl.value.trim(), t().tokenCopied));
-    $("loadProfileBtn").addEventListener("click", loadProfile);
-    $("saveProfileBtn").addEventListener("click", saveProfile);
-    $("menuLoadProfileAction").addEventListener("click", async () => { closeUserMenu(); await loadProfile(); });
-    $("menuCopyWorkspaceAction").addEventListener("click", async () => { closeUserMenu(); await copyText(resolvedWorkspaceId(), t().workspaceCopied); });
-    $("menuCopySessionAction").addEventListener("click", async () => { closeUserMenu(); await copyText(sessionTokenEl.value.trim(), t().tokenCopied); });
-    $("menuToggleAuthAction").addEventListener("click", () => { closeUserMenu(); toggleAuthState(); });
+    on("healthBtn", "click", () => refreshSystemStatus("manual"));
+    on("manualRefreshBtn", "click", () => refreshSystemStatus("manual"));
+    on("oauthBtn", "click", runOAuthStart);
+    on("oauthBtnTop", "click", runOAuthStart);
+    on("toggleAuthBtn", "click", toggleAuthState);
+    on("copySessionBtn", "click", () => copyText(sessionTokenEl.value.trim(), t().tokenCopied));
+    on("loadProfileBtn", "click", loadProfile);
+    on("saveProfileBtn", "click", saveProfile);
+    on("menuLoadProfileAction", "click", async () => { closeUserMenu(); await loadProfile(); });
+    on("menuCopyWorkspaceAction", "click", async () => { closeUserMenu(); await copyText(resolvedWorkspaceId(), t().workspaceCopied); });
+    on("menuCopySessionAction", "click", async () => { closeUserMenu(); await copyText(sessionTokenEl.value.trim(), t().tokenCopied); });
+    on("menuToggleAuthAction", "click", () => { closeUserMenu(); toggleAuthState(); });
 
     userMenuToggleEl.addEventListener("click", (event) => {
       event.stopPropagation();
