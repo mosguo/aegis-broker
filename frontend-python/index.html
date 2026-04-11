@@ -1324,18 +1324,14 @@
       }
     }
 
-    function toggleAuthState() {
+    async function toggleAuthState() {
       if (isLoggedIn) {
         syncLoginState(false);
         printOutput({ status: "logged_out" });
         return;
       }
-      if (!sessionTokenEl.value.trim()) {
-        printOutput(t().authToggleNeedToken);
-        return;
-      }
-      syncLoginState(true, { keepToken: true });
-      runSessionProbe("manual");
+
+      await runOAuthStart();
     }
 
     async function loadProfile() {
@@ -1430,7 +1426,7 @@
     on("menuLoadProfileAction", "click", async () => { closeUserMenu(); await loadProfile(); });
     on("menuCopyWorkspaceAction", "click", async () => { closeUserMenu(); await copyText(resolvedWorkspaceId(), t().workspaceCopied); });
     on("menuCopySessionAction", "click", async () => { closeUserMenu(); await copyText(sessionTokenEl.value.trim(), t().tokenCopied); });
-    on("menuToggleAuthAction", "click", () => { closeUserMenu(); toggleAuthState(); });
+    on("menuToggleAuthAction", "click", async () => { closeUserMenu(); await toggleAuthState(); });
 
     userMenuToggleEl.addEventListener("click", (event) => {
       event.stopPropagation();

@@ -18,10 +18,10 @@ The goal is to let guest users browse public, read-only brokerage content and do
 
 The MedAgri Brokers website presents a classic broker-information structure centered on:
 
-- company/about information
+- company and about information
 - broker and advisory services
 - commodity categories
-- team/contact details
+- team and contact details
 
 Reference:
 
@@ -33,11 +33,11 @@ This is a style and information-architecture reference only. AegisBroker should 
 2. services and capabilities
 3. commodity or market coverage
 4. forms and documents
-5. contact / inquiry entry points
+5. contact and inquiry entry points
 
 ## Existing Internal Document Libraries
 
-The repository already contains a substantial traditional-form inventory under [Docs](/C:/Users/mos/Documents/GitHub/aegis-broker/Docs):
+The repository already contains a substantial traditional-form inventory under [library](/C:/Users/mos/Documents/GitHub/aegis-broker/library):
 
 - `00_總覽`: 2 files
 - `01_咖啡豆市場`: 35 files
@@ -51,9 +51,9 @@ These files are the initial source set for the new content-service layer.
 
 Each major market currently follows a repeatable hierarchy:
 
-- `01_核心文件`
-- `02_擴充文件`
-- `03_進階文件`
+- `01_咖啡豆市場`
+- `02_原油市場`
+- `03_金屬市場`
 
 This makes the library suitable for a unified document-service abstraction rather than one-off file pages.
 
@@ -91,7 +91,7 @@ Authenticated users may additionally:
 - submit workflow-bound document requests
 - load profile-bound service context
 
-### 3. Operator / publisher mode
+### 3. Operator or publisher mode
 
 Privileged users may:
 
@@ -109,7 +109,7 @@ The frontend menu should evolve into five integrated content-service groups:
 1. Overview
 2. Content Services
 3. Forms Service
-4. Connection / Session
+4. Connection and Session
 5. Event Output
 
 ### Overview
@@ -135,7 +135,7 @@ Suggested subsections:
 - Brokerage Services
 - Commodity Markets
 - Market Intelligence
-- Contact / Inquiry
+- Contact and Inquiry
 
 ### Forms Service
 
@@ -155,7 +155,7 @@ Suggested subsections:
 - Public document downloads
 - Controlled form request queue
 
-### Connection / Session
+### Connection and Session
 
 Purpose:
 
@@ -205,7 +205,7 @@ The new content-service layer should be implemented as additive modules.
 
 ### Source-of-record file mapping
 
-The current filesystem library in [Docs](/C:/Users/mos/Documents/GitHub/aegis-broker/Docs) should be ingested into metadata records with these concepts:
+The current filesystem library in [library](/C:/Users/mos/Documents/GitHub/aegis-broker/library) should be ingested into metadata records with these concepts:
 
 - market
 - document family
@@ -256,7 +256,7 @@ Material write APIs for:
 
 These writes must preserve:
 
-- trace_id
+- `trace_id`
 - workspace scope
 - reason code
 - requester identity or guest channel
@@ -288,7 +288,7 @@ Suggested additive API groups:
 
 ## Event and Audit Requirements
 
-The following operations are materially relevant and must not bypass event/audit controls:
+The following operations are materially relevant and must not bypass event and audit controls:
 
 - publishing a content item
 - changing a document visibility rule
@@ -312,7 +312,7 @@ Suggested event families:
 1. Add content-service architecture document
 2. Align frontend menu and placeholders
 3. Build document-library metadata ingestion
-4. Add read-only public content/document APIs
+4. Add read-only public content and document APIs
 5. Add public document browsing UI
 6. Add controlled document request workflows
 7. Add publication and audit-backed operator flows
@@ -342,7 +342,7 @@ Suggested event families:
 
 The document asset placeholders for these rollout phases are stored under:
 
-- [library/10_商品服務路線圖](/C:/Users/mos/Documents/GitHub/aegis-broker/library/10_商品服務路線圖)
+- [library/10_商品服務路線圖](/C:/Users/mos/Documents/GitHub/aegis-broker/library/10_%E5%95%86%E5%93%81%E6%9C%8D%E5%8B%99%E8%B7%AF%E7%B7%9A%E5%9C%96)
 
 ## Initial Implementation Scope
 
@@ -358,16 +358,16 @@ The first slice should not yet attempt:
 
 - full OCR or document parsing
 - destructive migration of the existing `library/` library
-- bypassing event/audit for controlled publication
+- bypassing event and audit for controlled publication
 
 ## Menu-to-Service Integration Mapping
 
 | Menu Group | Content Service Responsibility | Initial Data Source |
 |---|---|---|
-| Overview | Broker summary, system status, platform introduction | frontend runtime config + curated content |
+| Overview | Broker summary, system status, platform introduction | frontend runtime config plus curated content |
 | Content Services | About, services, commodities, contact | managed content items |
 | Forms Service | Traditional forms, market libraries, public documents | `library/` folder metadata |
-| Connection / Session | backend, workspace, session diagnostics | runtime config + auth/session APIs |
+| Connection and Session | backend, workspace, session diagnostics | runtime config plus auth and session APIs |
 | Event Output | trace and API diagnostics | frontend debug output |
 
 ## Design Preservation Note
