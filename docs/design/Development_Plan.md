@@ -216,6 +216,7 @@ The first visible layer should summarize:
 - count of planned services
 - count of role-restricted services
 - nearest upcoming service milestones
+- quick search and status filter entry points for the service matrix
 
 ### Recommended detail layer
 
@@ -224,6 +225,13 @@ The detail layer should show the service matrix and highlight intersections betw
 - service role support
 - current availability
 - permission restriction
+- planned availability milestones
+
+The detailed interaction should support:
+
+- in-conversation search across service name, category, access entry point, and restriction text
+- one-click filtering by `online`, `limited`, `planned`, `guest-visible`, and `role-restricted`
+- right-side detail rendering for role × status explanation
 
 This is the minimum readable way to explain what is usable, by whom, and under which constraints.
 
@@ -295,7 +303,7 @@ That design expands the platform with:
 ### Stage 3: Service availability and content discovery
 
 - implement the `Currently Available Services` query module
-- expose service availability summary and matrix rendering
+- expose service availability summary, milestone cards, and interactive matrix rendering
 - add queryable content and document browsing summaries for BrokerAI
 
 ### Stage 4: Content and document metadata services
