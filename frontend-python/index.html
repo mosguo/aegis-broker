@@ -955,6 +955,7 @@
     const i18n = { "zh-TW": zhTW, "zh-CN": zhTW, en, es: en, tr: en };
     const runtimeConfig = window.__AEGIS_CONFIG__ || {};
     const LOCAL_STORAGE_BACKEND_KEY = "aegis.backendBaseUrl";
+    const LOCAL_STORAGE_SESSION_KEY = "aegis.sessionToken";
     const HEALTH_POLL_INTERVAL_MS = 30000;
     const DEFAULT_WORKSPACE_ID = "00000000-0000-0000-0000-000000000001";
     const $ = (id) => document.getElementById(id);
@@ -1009,6 +1010,48 @@
 
     function resolvedWorkspaceId() {
       return workspaceEl.value.trim() || DEFAULT_WORKSPACE_ID;
+    }
+
+    function persistSessionToken(token) {
+      const next = (token || "").trim();
+      if (!next) {
+        localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
+        sessionTokenEl.value = "";
+        return;
+      }
+
+      localStorage.setItem(LOCAL_STORAGE_SESSION_KEY, next);
+      sessionTokenEl.value = next;
+    }
+
+    function consumeAuthCallbackHash() {
+      const rawHash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
+      if (!rawHash) return;
+
+      const hash = new URLSearchParams(rawHash);
+      const authStatus = (hash.get("auth_status") || "").trim();
+      if (!authStatus) return;
+
+      if (authStatus === "success") {
+        const sessionToken = (hash.get("session_token") || "").trim();
+        const workspaceId = (hash.get("workspace_id") || "").trim();
+        const expiresAt = (hash.get("expires_at") || "").trim();
+        const traceId = (hash.get("trace_id") || "").trim();
+
+        if (sessionToken) {
+          persistSessionToken(sessionToken);
+          syncLoginState(true, { keepToken: true });
+          tokenPreparedState();
+          printOutput({
+            status: "oauth_callback_success",
+            workspace_id: workspaceId || resolvedWorkspaceId(),
+            expires_at: expiresAt,
+            trace_id: traceId
+          });
+        }
+      }
+
+      history.replaceState(null, "", `${location.pathname}${location.search}`);
     }
 
     function render(locale) {
@@ -1112,7 +1155,7 @@
       refreshAuthLabels();
 
       if (!next) {
-        if (!keepToken) sessionTokenEl.value = "";
+        if (!keepToken) persistSessionToken("");
         userNameEl.textContent = t().guestLabel;
         userRoleEl.textContent = t().guestRole;
         updateAvatar("guest");
@@ -1282,7 +1325,7 @@
         setCard(sessionLight, sessionLightSummary, sessionLightMeta, "bad", "Session invalid", `GET /v1/me/profile -> ${resp.status}`);
         setToolbarLights({ session: "bad" });
         setToolbarTooltip(toolbarSessionStatus, "Login: invalid");
-        sessionTokenEl.value = "";
+        persistSessionToken("");
         if (source !== "auto") printOutput({ status: resp.status, body });
       } catch (error) {
         setStatuses({
@@ -1448,8 +1491,10 @@
     backend = resolveBackendBaseUrl();
     backendUrlEl.value = backend;
     workspaceEl.value = resolvedWorkspaceId();
+    persistSessionToken(localStorage.getItem(LOCAL_STORAGE_SESSION_KEY) || "");
     render(localeEl.value);
     syncLoginState(false, { keepToken: true });
+    consumeAuthCallbackHash();
     setStatuses({
       backend: { text: "idle", mode: "warn" },
       auth: { text: "idle", mode: "warn" },
@@ -1462,6 +1507,7 @@
     setToolbarTooltip(toolbarBackendStatus, "Backend: checking");
     setToolbarTooltip(toolbarDatabaseStatus, "Database: checking");
     setToolbarTooltip(toolbarSessionStatus, "Login: waiting");
+    tokenPreparedState();
     schedulePolling();
     refreshSystemStatus("auto");
   </script>

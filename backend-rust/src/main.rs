@@ -6,6 +6,7 @@ use std::{collections::HashMap, sync::Arc};
 use axum::{
     extract::{Path, Query, State},
     http::{HeaderMap, Method},
+    response::{IntoResponse, Redirect, Response},
     routing::{get, put},
     Json, Router,
 };
@@ -96,6 +97,7 @@ struct AuthStartResponse {
 struct AuthCallbackQuery {
     code: String,
     state: String,
+    response_mode: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -447,7 +449,7 @@ async fn auth_google_start(
 async fn auth_google_callback(
     State(state): State<Arc<AppState>>,
     Query(query): Query<AuthCallbackQuery>,
-) -> Result<Json<AuthCallbackResponse>, AppError> {
+) -> Result<Response, AppError> {
     let trace_id = Uuid::new_v4().to_string();
 
     let oauth_row = sqlx::query_as::<_, (Uuid, Uuid, bool)>(
@@ -737,13 +739,27 @@ async fn auth_google_callback(
     )
     .await?;
 
-    Ok(Json(AuthCallbackResponse {
+    let response = AuthCallbackResponse {
         session_token,
         expires_at: session_expires_at.to_rfc3339(),
         trace_id,
         workspace_id: oauth_row.1,
         user: profile,
-    }))
+    };
+
+    if matches!(query.response_mode.as_deref(), Some("json")) {
+        return Ok(Json(response).into_response());
+    }
+
+    let redirect_target = format!(
+        "/#auth_status=success&session_token={}&workspace_id={}&expires_at={}&trace_id={}",
+        urlencoding::encode(&response.session_token),
+        urlencoding::encode(&response.workspace_id.to_string()),
+        urlencoding::encode(&response.expires_at),
+        urlencoding::encode(&response.trace_id),
+    );
+
+    Ok(Redirect::to(&redirect_target).into_response())
 }
 
 async fn get_me_profile(
