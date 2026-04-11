@@ -1024,34 +1024,66 @@
       sessionTokenEl.value = next;
     }
 
-    function consumeAuthCallbackHash() {
+    function currentConsoleBaseUrl() {
+      if (location.origin && location.protocol.startsWith("http")) return location.origin;
+      return backend || "";
+    }
+
+    function apiUrl(path) {
+      const normalized = path.startsWith("/") ? path : `/${path}`;
+      return `${currentConsoleBaseUrl()}${normalized}`;
+    }
+
+    async function consumeAuthCallbackState() {
       const rawHash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
-      if (!rawHash) return;
+      const hashParams = new URLSearchParams(rawHash || "");
+      const searchParams = new URLSearchParams(location.search || "");
+      const authStatus = (hashParams.get("auth_status") || searchParams.get("auth_status") || "").trim();
 
-      const hash = new URLSearchParams(rawHash);
-      const authStatus = (hash.get("auth_status") || "").trim();
-      if (!authStatus) return;
+      if (!authStatus) return false;
 
-      if (authStatus === "success") {
-        const sessionToken = (hash.get("session_token") || "").trim();
-        const workspaceId = (hash.get("workspace_id") || "").trim();
-        const expiresAt = (hash.get("expires_at") || "").trim();
-        const traceId = (hash.get("trace_id") || "").trim();
+      const sessionToken = (hashParams.get("session_token") || searchParams.get("session_token") || "").trim();
+      const workspaceId = (hashParams.get("workspace_id") || searchParams.get("workspace_id") || "").trim();
+      const expiresAt = (hashParams.get("expires_at") || searchParams.get("expires_at") || "").trim();
+      const traceId = (hashParams.get("trace_id") || searchParams.get("trace_id") || "").trim();
+      const errorCode = (hashParams.get("error_code") || searchParams.get("error_code") || "").trim();
+      const message = (hashParams.get("message") || searchParams.get("message") || "").trim();
 
-        if (sessionToken) {
-          persistSessionToken(sessionToken);
-          syncLoginState(true, { keepToken: true });
-          tokenPreparedState();
-          printOutput({
-            status: "oauth_callback_success",
-            workspace_id: workspaceId || resolvedWorkspaceId(),
-            expires_at: expiresAt,
-            trace_id: traceId
-          });
-        }
+      history.replaceState(null, "", location.pathname);
+
+      if (workspaceId) workspaceEl.value = workspaceId;
+
+      if (authStatus === "success" && sessionToken) {
+        persistSessionToken(sessionToken);
+        syncLoginState(true, { keepToken: true });
+        setStatuses({
+          auth: { text: "success", mode: "ok" },
+          session: { text: "verifying", mode: "warn" }
+        });
+        setToolbarLights({ session: "warn" });
+        setToolbarTooltip(toolbarSessionStatus, "Login: verifying");
+        printOutput({
+          status: "oauth_callback_success",
+          workspace_id: workspaceId || resolvedWorkspaceId(),
+          expires_at: expiresAt,
+          trace_id: traceId
+        });
+        await runSessionProbe("oauth_callback");
+        return true;
       }
 
-      history.replaceState(null, "", `${location.pathname}${location.search}`);
+      syncLoginState(false);
+      setStatuses({
+        auth: { text: "failed", mode: "warn" },
+        session: { text: "idle", mode: "warn" }
+      });
+      printOutput({
+        status: "oauth_callback_failed",
+        error_code: errorCode || "OAUTH_CALLBACK_FAILED",
+        message: message || "OAuth callback failed",
+        trace_id: traceId
+      });
+      return true;
     }
 
     function render(locale) {
@@ -1249,8 +1281,8 @@
 
       try {
         const [liveResp, readyResp] = await Promise.all([
-          fetch(`${backend}/health/live`),
-          fetch(`${backend}/health/ready`)
+          fetch(apiUrl("/health/live")),
+          fetch(apiUrl("/health/ready"))
         ]);
         const live = await parseBody(liveResp);
         const ready = await parseBody(readyResp);
@@ -1295,7 +1327,7 @@
       }
 
       try {
-        const resp = await fetch(`${backend}/v1/me/profile`, { headers: authHeaders() });
+        const resp = await fetch(apiUrl("/v1/me/profile"), { headers: authHeaders() });
         const body = await parseBody(resp);
 
         if (resp.ok) {
@@ -1353,7 +1385,7 @@
         const workspace = resolvedWorkspaceId();
         workspaceEl.value = workspace;
         setStatuses({ auth: { text: "requesting", mode: "warn" } });
-        const resp = await fetch(`${backend}/auth/google/start?workspace_id=${encodeURIComponent(workspace)}`);
+        const resp = await fetch(apiUrl(`/auth/google/start?workspace_id=${encodeURIComponent(workspace)}`));
         const body = await printResponse(resp);
         if (resp.ok && body.auth_url) {
           window.location.assign(body.auth_url);
@@ -1379,7 +1411,7 @@
 
     async function loadProfile() {
       try {
-        const resp = await fetch(`${backend}/v1/me/profile`, { headers: authHeaders() });
+        const resp = await fetch(apiUrl("/v1/me/profile"), { headers: authHeaders() });
         const body = await printResponse(resp);
         if (resp.ok) {
           $("displayName").value = body.display_name || "";
@@ -1408,7 +1440,7 @@
           locale: $("profileLocale").value,
           reason_code: $("reasonCode").value
         };
-        const resp = await fetch(`${backend}/v1/me/profile`, {
+        const resp = await fetch(apiUrl("/v1/me/profile"), {
           method: "PUT",
           headers: {
             ...authHeaders(),
@@ -1488,28 +1520,32 @@
 
     const defaultLocale = runtimeConfig.DEFAULT_LOCALE || "zh-TW";
     if ([...localeEl.options].some((option) => option.value === defaultLocale)) localeEl.value = defaultLocale;
-    backend = resolveBackendBaseUrl();
-    backendUrlEl.value = backend;
-    workspaceEl.value = resolvedWorkspaceId();
-    persistSessionToken(localStorage.getItem(LOCAL_STORAGE_SESSION_KEY) || "");
-    render(localeEl.value);
-    syncLoginState(false, { keepToken: true });
-    consumeAuthCallbackHash();
-    setStatuses({
-      backend: { text: "idle", mode: "warn" },
-      auth: { text: "idle", mode: "warn" },
-      session: { text: "idle", mode: "warn" }
-    });
-    setCard(backendLight, backendLightSummary, backendLightMeta, "warn", t().backendLightSummary, t().backendLightMeta);
-    setCard(databaseLight, databaseLightSummary, databaseLightMeta, "warn", t().databaseLightSummary, t().databaseLightMeta);
-    setCard(sessionLight, sessionLightSummary, sessionLightMeta, "warn", t().sessionLightSummary, t().sessionLightMeta);
-    setToolbarLights({ backend: "warn", database: "warn", session: "warn" });
-    setToolbarTooltip(toolbarBackendStatus, "Backend: checking");
-    setToolbarTooltip(toolbarDatabaseStatus, "Database: checking");
-    setToolbarTooltip(toolbarSessionStatus, "Login: waiting");
-    tokenPreparedState();
-    schedulePolling();
-    refreshSystemStatus("auto");
+    async function bootstrap() {
+      backend = resolveBackendBaseUrl();
+      backendUrlEl.value = backend;
+      workspaceEl.value = resolvedWorkspaceId();
+      persistSessionToken(localStorage.getItem(LOCAL_STORAGE_SESSION_KEY) || "");
+      render(localeEl.value);
+      syncLoginState(false, { keepToken: true });
+      setStatuses({
+        backend: { text: "idle", mode: "warn" },
+        auth: { text: "idle", mode: "warn" },
+        session: { text: "idle", mode: "warn" }
+      });
+      setCard(backendLight, backendLightSummary, backendLightMeta, "warn", t().backendLightSummary, t().backendLightMeta);
+      setCard(databaseLight, databaseLightSummary, databaseLightMeta, "warn", t().databaseLightSummary, t().databaseLightMeta);
+      setCard(sessionLight, sessionLightSummary, sessionLightMeta, "warn", t().sessionLightSummary, t().sessionLightMeta);
+      setToolbarLights({ backend: "warn", database: "warn", session: "warn" });
+      setToolbarTooltip(toolbarBackendStatus, "Backend: checking");
+      setToolbarTooltip(toolbarDatabaseStatus, "Database: checking");
+      setToolbarTooltip(toolbarSessionStatus, "Login: waiting");
+      tokenPreparedState();
+      await consumeAuthCallbackState();
+      schedulePolling();
+      await refreshSystemStatus("auto");
+    }
+
+    bootstrap();
   </script>
 </body>
 </html>
