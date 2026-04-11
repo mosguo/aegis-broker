@@ -419,15 +419,19 @@ async fn auth_google_start(
         .append_pair("response_type", "code")
         .append_pair("scope", &state.config.google_oauth_scope)
         .append_pair("state", &state_token)
-        .append_pair("nonce", &nonce)
-        .append_pair("include_granted_scopes", "true");
+        .append_pair("access_type", "offline")
+        .append_pair("include_granted_scopes", "true")
+        .append_pair("prompt", "consent");
     let auth_url = auth_url.into_string();
 
     info!(
         trace_id = %trace_id,
         operation = "auth_google_start",
         workspace_id = %workspace_id,
+        client_id = %client_id,
+        scope = %state.config.google_oauth_scope,
         redirect_uri = %redirect_uri,
+        auth_url = %auth_url,
         status = "generated",
         "generated google auth url"
     );
