@@ -68,8 +68,10 @@ class AegisFrontendHandler(SimpleHTTPRequestHandler):
             method=self.command,
         )
 
+        opener = urllib.request.build_opener(NoRedirectHandler)
+
         try:
-            with urllib.request.urlopen(request, timeout=15) as response:
+            with opener.open(request, timeout=15) as response:
                 body = response.read()
                 self.send_response(response.status)
                 content_type = response.headers.get("Content-Type", "application/octet-stream")
@@ -144,6 +146,11 @@ class AegisThreadingHTTPServer(ThreadingHTTPServer):
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         super().server_bind()
+
+
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
 
 
 def main():
