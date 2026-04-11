@@ -86,6 +86,36 @@ struct WorkspaceDto {
 }
 
 #[derive(Debug, Serialize)]
+struct ServiceCatalogSummaryDto {
+    online_count: usize,
+    limited_count: usize,
+    planned_count: usize,
+    internal_only_count: usize,
+    role_restricted_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct ServiceCatalogEntryDto {
+    service_key: String,
+    service_name: String,
+    service_category: String,
+    supported_roles: Vec<String>,
+    service_status: String,
+    permission_restrictions: Vec<String>,
+    access_entry_point: String,
+    planned_availability: Option<String>,
+    implementation_note: String,
+}
+
+#[derive(Debug, Serialize)]
+struct ServiceCatalogResponseDto {
+    trace_id: String,
+    workspace_id: Uuid,
+    summary: ServiceCatalogSummaryDto,
+    services: Vec<ServiceCatalogEntryDto>,
+}
+
+#[derive(Debug, Serialize)]
 struct AuthStartResponse {
     auth_url: String,
     state: String,
@@ -191,6 +221,7 @@ async fn main() {
         .route("/health/ready", get(health_ready))
         .route("/v1/workspaces", get(list_workspaces))
         .route("/v1/workspaces", axum::routing::post(create_workspace))
+        .route("/v1/service-catalog", get(get_service_catalog))
         .route("/auth/google/start", get(auth_google_start))
         .route("/auth/google/callback", get(auth_google_callback))
         .route("/v1/me/profile", get(get_me_profile))
@@ -347,6 +378,253 @@ async fn create_workspace(
         name: name.to_string(),
         status: "active".to_string(),
         created_at: created_at.to_rfc3339(),
+    }))
+}
+
+async fn get_service_catalog() -> Result<Json<ServiceCatalogResponseDto>, AppError> {
+    let trace_id = Uuid::new_v4().to_string();
+    let workspace_id = Uuid::parse_str(DEFAULT_WORKSPACE_ID).map_err(|_| {
+        AppError::internal(
+            "DEFAULT_WORKSPACE_INVALID",
+            "default workspace id is invalid",
+            trace_id.clone(),
+        )
+    })?;
+
+    let services = vec![
+        ServiceCatalogEntryDto {
+            service_key: "broker_ai_conversation".to_string(),
+            service_name: "BrokerAI Conversation".to_string(),
+            service_category: "conversation".to_string(),
+            supported_roles: vec![
+                "guest".to_string(),
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "online".to_string(),
+            permission_restrictions: vec![
+                "Guest users are limited to read-only public guidance.".to_string(),
+            ],
+            access_entry_point: "sidebar:new_conversation".to_string(),
+            planned_availability: None,
+            implementation_note:
+                "Primary conversation shell for BrokerAI-assisted brokerage guidance."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "commodity_categories".to_string(),
+            service_name: "Commodity Categories".to_string(),
+            service_category: "catalog".to_string(),
+            supported_roles: vec![
+                "guest".to_string(),
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "limited".to_string(),
+            permission_restrictions: vec![
+                "Current release provides category browsing and rollout guidance only."
+                    .to_string(),
+            ],
+            access_entry_point: "sidebar:commodity_categories".to_string(),
+            planned_availability: Some("Phase 1-3 rollout active".to_string()),
+            implementation_note:
+                "Ontology-backed navigation for energy, metals, agriculture, and environmental products."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "currently_available_services".to_string(),
+            service_name: "Currently Available Services".to_string(),
+            service_category: "platform".to_string(),
+            supported_roles: vec![
+                "guest".to_string(),
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "online".to_string(),
+            permission_restrictions: vec![
+                "Operational details are read-only in the current milestone.".to_string(),
+            ],
+            access_entry_point: "sidebar:currently_available_services".to_string(),
+            planned_availability: None,
+            implementation_note:
+                "Unified matrix for supported and planned services, roles, and restrictions."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "forms_service".to_string(),
+            service_name: "Forms Service".to_string(),
+            service_category: "documents".to_string(),
+            supported_roles: vec![
+                "guest".to_string(),
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+            ],
+            service_status: "limited".to_string(),
+            permission_restrictions: vec![
+                "Guest access is limited to public form metadata and sample documents."
+                    .to_string(),
+                "Controlled submissions remain planned.".to_string(),
+            ],
+            access_entry_point: "sidebar:forms_service".to_string(),
+            planned_availability: Some(
+                "Submission workflow planned after content indexing baseline".to_string(),
+            ),
+            implementation_note:
+                "Backed by the library folder for traditional broker forms and templates."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "process_documents".to_string(),
+            service_name: "Process Documents".to_string(),
+            service_category: "documents".to_string(),
+            supported_roles: vec![
+                "guest".to_string(),
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+            ],
+            service_status: "planned".to_string(),
+            permission_restrictions: vec![
+                "Controlled publication and audit-linked access are still being implemented."
+                    .to_string(),
+            ],
+            access_entry_point: "sidebar:process_documents".to_string(),
+            planned_availability: Some("After document metadata service rollout".to_string()),
+            implementation_note:
+                "Workflow-oriented document discovery for brokerage procedures and guided operations."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "operation_logs".to_string(),
+            service_name: "Operation Logs".to_string(),
+            service_category: "audit".to_string(),
+            supported_roles: vec![
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "planned".to_string(),
+            permission_restrictions: vec![
+                "Restricted to elevated roles because logs expose trace and audit detail."
+                    .to_string(),
+            ],
+            access_entry_point: "sidebar:operation_logs".to_string(),
+            planned_availability: Some("After audit log reader and policy gates".to_string()),
+            implementation_note:
+                "Conversation-linked operational trace, event, and audit viewing."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "market_search".to_string(),
+            service_name: "Current Market Commodity Search".to_string(),
+            service_category: "market".to_string(),
+            supported_roles: vec![
+                "guest".to_string(),
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "planned".to_string(),
+            permission_restrictions: vec![
+                "Public users will receive delayed or curated results only.".to_string(),
+            ],
+            access_entry_point: "conversation:market_search_result".to_string(),
+            planned_availability: Some("Phase 1 commodity rollout".to_string()),
+            implementation_note:
+                "Search result cards for current market commodities and broker-curated market summaries."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "price_matching".to_string(),
+            service_name: "Price Matching".to_string(),
+            service_category: "trading".to_string(),
+            supported_roles: vec![
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "planned".to_string(),
+            permission_restrictions: vec![
+                "Requires authenticated trading workspace and future market permissions."
+                    .to_string(),
+            ],
+            access_entry_point: "conversation:price_match_panel".to_string(),
+            planned_availability: Some("After pricing feed normalization baseline".to_string()),
+            implementation_note:
+                "Conversation-attached module for indicative matching and broker negotiation support."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "commodity_ad_placement".to_string(),
+            service_name: "Commodity Advertising Placement".to_string(),
+            service_category: "promotion".to_string(),
+            supported_roles: vec![
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "planned".to_string(),
+            permission_restrictions: vec![
+                "Publishing rights and review workflows are required.".to_string(),
+            ],
+            access_entry_point: "conversation:ad_campaign_panel".to_string(),
+            planned_availability: Some(
+                "After content moderation and publishing controls".to_string(),
+            ),
+            implementation_note:
+                "Broker campaign planning for commodity inventory and promotional placement."
+                    .to_string(),
+        },
+        ServiceCatalogEntryDto {
+            service_key: "market_order_entry".to_string(),
+            service_name: "Market Order Entry".to_string(),
+            service_category: "trading".to_string(),
+            supported_roles: vec![
+                "workspace_member".to_string(),
+                "workspace_admin".to_string(),
+                "operator".to_string(),
+            ],
+            service_status: "planned".to_string(),
+            permission_restrictions: vec![
+                "Reserved for authenticated users with execution permissions.".to_string(),
+            ],
+            access_entry_point: "conversation:order_entry_panel".to_string(),
+            planned_availability: Some("After RFQ / Quote / Deal core flow hardening".to_string()),
+            implementation_note:
+                "Future order-entry and execution surfaces attached to BrokerAI conversations."
+                    .to_string(),
+        },
+    ];
+
+    let summary = ServiceCatalogSummaryDto {
+        online_count: services
+            .iter()
+            .filter(|service| service.service_status == "online")
+            .count(),
+        limited_count: services
+            .iter()
+            .filter(|service| service.service_status == "limited")
+            .count(),
+        planned_count: services
+            .iter()
+            .filter(|service| service.service_status == "planned")
+            .count(),
+        internal_only_count: services
+            .iter()
+            .filter(|service| service.service_status == "internal_only")
+            .count(),
+        role_restricted_count: services
+            .iter()
+            .filter(|service| !service.supported_roles.iter().any(|role| role == "guest"))
+            .count(),
+    };
+
+    Ok(Json(ServiceCatalogResponseDto {
+        trace_id,
+        workspace_id,
+        summary,
+        services,
     }))
 }
 
