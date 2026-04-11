@@ -25,7 +25,7 @@ All implementation decisions must preserve those properties.
 
 ## Source of Truth
 
-Before changing architecture, database structure, API behavior, payment flow, or deployment assumptions, read these documents in `docs/architecture/`:
+Before changing architecture, database structure, API behavior, payment flow, or deployment assumptions, read these documents in `docs/design/`:
 
 1. `Core_Event_Audit_Architecture_Spec_WorkItem_List.md`
 2. `PostgreSQL_Schema_Migration_Spec.md`

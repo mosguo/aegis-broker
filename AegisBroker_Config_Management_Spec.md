@@ -190,7 +190,7 @@ Postgres:
 
 ## 6) 與多語策略整合
 
-本規格與 `docs/architecture/Development_Plan.md` 一致：
+本規格與 `docs/design/Development_Plan.md` 一致：
 - 任何 user-facing 訊息（含非圖形介面）都需支援
   `zh-TW`, `zh-CN`, `en`, `es`, `tr`。
 - config 中 `DEFAULT_LOCALE` 與 `ENABLED_LOCALES` 必須維持環境可配置。

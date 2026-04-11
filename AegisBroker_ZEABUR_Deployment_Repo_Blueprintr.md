@@ -732,7 +732,7 @@ At minimum:
 - `infra/env/frontend.example.env`
 - `infra/docker/backend.Dockerfile`
 - `infra/docker/frontend.Dockerfile`
-- `docs/architecture/*.md`
+- `docs/design/*.md`
 
 ---
 

@@ -1,10 +1,10 @@
 # AegisBroker
 
-AegisBroker 是面向大宗商品經紀業務的事件驅動控制型系統。
+AegisBroker is an event-driven broker operating system for commodity brokerage.
 
 - Repository Version: `0.1.1`
-- Spec Baseline: `v0.9.0`
-- Milestone Status: `v0.1.1（Config Layering + Zeabur Deploy-Ready Env Baseline）`
+- Deployment Target: `Zeabur`
+- Primary Stack: `Rust backend` + `Python frontend` + `PostgreSQL`
 
 ## Repository Layout
 
@@ -13,51 +13,40 @@ aegis-broker/
 ├─ AGENTS.md
 ├─ README.md
 ├─ docs/
-│  └─ architecture/
+│  └─ design/
 ├─ infra/
 ├─ backend-rust/
 ├─ frontend-python/
+├─ library/
 └─ storage/
 ```
 
-## v0.1.1 Scope
+## Directory Roles
 
-目前新增：
+- `docs/design/`: architecture source of truth, design preservation, and rollout planning
+- `library/`: business document assets, traditional forms, commodity files, and content-service materials
+- `backend-rust/`: API, control logic, event flow, audit flow, and payment/ledger services
+- `frontend-python/`: operational console, content-service UI, and frontend orchestration
+- `storage/`: migrations, DB bootstrap scripts, and storage-related operational files
 
-1. backend env 分層樣板（dev / staging / prod）
-2. v0.1.1 最低必要變數：
-   - `DATABASE_URL`
-   - `MAX_DB_CONNECTIONS=5`
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - `GOOGLE_REDIRECT_URI`
-   - `GOOGLE_CONNECTOR_REDIRECT_URI`
-3. Zeabur backend service env 映射升級
-4. DB overview + initial setup 文件（`storage/README.md`）
+## Start Here
 
-## Root Env Bootstrap for Zeabur
+Before changing architecture, schema, API behavior, payment flow, or deployment assumptions, read:
 
-新增三個根目錄 env 啟動檔（僅含安全佔位，不含 secrets 實值）：
+- [Design Index](/C:/Users/mos/Documents/GitHub/aegis-broker/docs/design/README.md)
+- [Development Plan](/C:/Users/mos/Documents/GitHub/aegis-broker/docs/design/Development_Plan.md)
+- [Content Service Architecture](/C:/Users/mos/Documents/GitHub/aegis-broker/docs/design/Content_Service_Architecture.md)
 
-- `.env`：共用基線
-- `.env.local`：本機開發預設
-- `.env.prod`：Zeabur production 佔位
+## Current Focus
 
-> secrets 未來仍以 Zeabur Environment Variables 為主，以上檔案用於「最大集合鍵名準備」與部署前核對。
+- Zeabur-compatible backend/frontend deployment
+- auth/session hardening
+- content-service architecture
+- traditional business form integration from `library/`
+- phased commodity service rollout
 
-## Quick Start (Backend)
+## Commodity Rollout
 
-```bash
-cd backend-rust
-cp ../.env.local .env
-cargo run
-```
-
-Health endpoints:
-
-- `GET /health/live`
-- `GET /health/ready`
-
-## Architecture Sources
-
-請先閱讀 `docs/architecture/README.md` 對應規格文件再進行核心流程擴充。
+- Phase 1: 原油 / 黃金 / 天然氣 / 小麥 / 咖啡
+- Phase 2: 銅 / 大豆 / 糖 / LNG
+- Phase 3: 鋰（新能源） / 碳權（Carbon credits） / 電力

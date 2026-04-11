@@ -9,7 +9,7 @@ This document defines the additive content-service architecture for AegisBroker.
 It integrates:
 
 - a brokerage-style public-facing content structure inspired by MedAgri Brokers
-- the repository's existing traditional business form libraries under `Docs/`
+- the repository's existing traditional business form libraries under `library/`
 - the current workspace, event, audit, and ZEABUR deployment constraints
 
 The goal is to let guest users browse public, read-only brokerage content and document libraries under the default workspace scope, while preserving the control architecture for any managed publication, controlled download, or workflow escalation.
@@ -317,20 +317,47 @@ Suggested event families:
 6. Add controlled document request workflows
 7. Add publication and audit-backed operator flows
 
+## Commodity Rollout Phases
+
+### Phase 1
+
+- 原油
+- 黃金
+- 天然氣
+- 小麥
+- 咖啡
+
+### Phase 2
+
+- 銅
+- 大豆
+- 糖
+- LNG
+
+### Phase 3
+
+- 鋰（新能源）
+- 碳權（Carbon credits）
+- 電力
+
+The document asset placeholders for these rollout phases are stored under:
+
+- [library/10_商品服務路線圖](/C:/Users/mos/Documents/GitHub/aegis-broker/library/10_商品服務路線圖)
+
 ## Initial Implementation Scope
 
 The first implementation slice should deliver:
 
 - guest-visible public content navigation
 - market-based document-library index pages
-- file metadata registry for current `Docs/` assets
+- file metadata registry for current `library/` assets
 - default-workspace guest access
 - Markdown-preserved architecture and menu design
 
 The first slice should not yet attempt:
 
 - full OCR or document parsing
-- destructive migration of the existing `Docs/` library
+- destructive migration of the existing `library/` library
 - bypassing event/audit for controlled publication
 
 ## Menu-to-Service Integration Mapping
@@ -339,7 +366,7 @@ The first slice should not yet attempt:
 |---|---|---|
 | Overview | Broker summary, system status, platform introduction | frontend runtime config + curated content |
 | Content Services | About, services, commodities, contact | managed content items |
-| Forms Service | Traditional forms, market libraries, public documents | `Docs/` folder metadata |
+| Forms Service | Traditional forms, market libraries, public documents | `library/` folder metadata |
 | Connection / Session | backend, workspace, session diagnostics | runtime config + auth/session APIs |
 | Event Output | trace and API diagnostics | frontend debug output |
 
